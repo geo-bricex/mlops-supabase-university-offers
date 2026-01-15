@@ -1,0 +1,13 @@
+streamlit
+pandas
+numpy
+sqlalchemy
+psycopg2-binary
+plotly
+python-dotenv
+pydeck
+openpyxl
+rapidfuzz
+# Add src dependencies if needed, but these cover most.
+pytest
+supabase

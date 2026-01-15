@@ -1,0 +1,1466 @@
+<html><head><meta charset='utf-8'><title>Data Quality Report</title></head><body><h1>Data Quality Report</h1><p><strong>File:</strong> data/oferta-academica2025.xlsx</p><p><strong>Run ID:</strong> 8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</p><h2>Metrics</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>metric</th>
+      <th>value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>rows_loaded</td>
+      <td>20045</td>
+    </tr>
+    <tr>
+      <td>ingest_new</td>
+      <td>17129</td>
+    </tr>
+    <tr>
+      <td>ingest_updated</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>ingest_unchanged</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>skipped_missing_dims</td>
+      <td>1050</td>
+    </tr>
+    <tr>
+      <td>duplicates_in_file</td>
+      <td>3706</td>
+    </tr>
+    <tr>
+      <td>invalid_territory</td>
+      <td>1176</td>
+    </tr>
+    <tr>
+      <td>invalid_territory_pair</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>conflicting_estado</td>
+      <td>1801</td>
+    </tr>
+    <tr>
+      <td>missing_NOMBRE_IES</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>missing_NOMBRE_CARRERA</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table><h2>Inconsistencies (preview)</h2><table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>issue_id</th>
+      <th>run_id</th>
+      <th>issue_type</th>
+      <th>natural_key</th>
+      <th>detail</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>652b8fda-8577-414f-bbca-8b5fee8d9ce6</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|maestria en automatizacion y control electronico industrial|ingenieria, industria y construccion|cuarto nivel o posgrado|presencial|pichincha|quito</td>
+      <td>{"row_index": 84, "row_hash": "0bbdd25bfa56559182934da8497c11eac35a3d377d403d51412293101a2c40c7"}</td>
+    </tr>
+    <tr>
+      <td>f030398d-3d80-40cd-96fa-3c2f6f7f23ff</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|maestria en automatizacion y control electronico industrial|ingenieria, industria y construccion|cuarto nivel o posgrado|presencial|pichincha|quito</td>
+      <td>{"row_index": 106, "row_hash": "0bbdd25bfa56559182934da8497c11eac35a3d377d403d51412293101a2c40c7"}</td>
+    </tr>
+    <tr>
+      <td>887b2026-b82b-4985-96ca-8bd60e5963d5</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad de cuenca|licenciatura en ciencias de la educacion con mencion en educacion intercultural bilingue|educacion|tercer nivel o pregrado|semipresencial|pastaza|</td>
+      <td>{"row_index": 1631, "row_hash": "a8367e92dad80caca2b5203d4590d21a4d1f4269123f51d4f5c065cbc9f283a0"}</td>
+    </tr>
+    <tr>
+      <td>463665a2-df6d-404d-9a2e-17365af76e17</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad de cuenca|licenciatura en ciencias de la educacion con mencion en educacion intercultural bilingue|educacion|tercer nivel o pregrado|semipresencial|pastaza|</td>
+      <td>{"row_index": 1632, "row_hash": "a8367e92dad80caca2b5203d4590d21a4d1f4269123f51d4f5c065cbc9f283a0"}</td>
+    </tr>
+    <tr>
+      <td>bea1ceb4-7a94-4ecb-9048-3e31a667c90c</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad de cuenca|licenciatura en ciencias de la educacion con mencion en educacion intercultural bilingue|educacion|tercer nivel o pregrado|semipresencial|pastaza|</td>
+      <td>{"row_index": 1633, "row_hash": "a8367e92dad80caca2b5203d4590d21a4d1f4269123f51d4f5c065cbc9f283a0"}</td>
+    </tr>
+    <tr>
+      <td>00a1f8f8-d189-44e2-acf1-1b8b3b304247</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad de cuenca|licenciatura en ciencias de la educacion con mencion en educacion intercultural bilingue|educacion|tercer nivel o pregrado|semipresencial|moronasantiago|</td>
+      <td>{"row_index": 1634, "row_hash": "cf67a587fd1d884ea0ee78d9920c92d707a5e343c57ca4ff24e3c54d54e451a0"}</td>
+    </tr>
+    <tr>
+      <td>b089285e-d1b1-4473-9b55-88dbb069ec44</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad de cuenca|licenciatura en ciencias de la educacion con mencion en educacion intercultural bilingue|educacion|tercer nivel o pregrado|semipresencial|moronasantiago|</td>
+      <td>{"row_index": 1635, "row_hash": "cf67a587fd1d884ea0ee78d9920c92d707a5e343c57ca4ff24e3c54d54e451a0"}</td>
+    </tr>
+    <tr>
+      <td>6afa24a4-b684-4b8e-95a5-4da091742e18</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad nacional de loja|tecnologia agropecuaria|agricultura|tercer nivel tecnico superior|presencial|loja|</td>
+      <td>{"row_index": 1873, "row_hash": "2214f9d0c651a1d22138092c841a1dd6453a910791d37af018079d3b7f057cfb"}</td>
+    </tr>
+    <tr>
+      <td>92c70e40-df80-4998-ab73-2ffad733b9c9</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad nacional de loja|educacion basica|educacion|tercer nivel o pregrado|presencial|loja|</td>
+      <td>{"row_index": 1875, "row_hash": "4f7853e03511806534bc8b0995d785edcadd7710653d314c650a29c9715833c6"}</td>
+    </tr>
+    <tr>
+      <td>2f86e99f-d531-4a63-a3b2-5cd95a204648</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad nacional de loja|tecnologia agropecuaria|agricultura|tercer nivel tecnico superior|presencial|loja|</td>
+      <td>{"row_index": 1876, "row_hash": "2214f9d0c651a1d22138092c841a1dd6453a910791d37af018079d3b7f057cfb"}</td>
+    </tr>
+    <tr>
+      <td>3f26ddc6-2f97-455e-9c4c-c7160d6c2198</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad nacional de loja|tecnologia agropecuaria|agricultura|tercer nivel tecnico superior|presencial|loja|</td>
+      <td>{"row_index": 1877, "row_hash": "2214f9d0c651a1d22138092c841a1dd6453a910791d37af018079d3b7f057cfb"}</td>
+    </tr>
+    <tr>
+      <td>a5511a58-5376-4399-8b9f-34fc2b530a3b</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad nacional de loja|informatica educativa|educacion|tercer nivel o pregrado|presencial|loja|</td>
+      <td>{"row_index": 1934, "row_hash": "223605ae85503fefe2b88b1c07e38bbe37a76241f7bb6858b56bba09f2f535f9"}</td>
+    </tr>
+    <tr>
+      <td>e2131810-0a84-47bf-9751-af48bab801e3</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad nacional de loja|ciencias de la educacion mencion investigacion educativa|educacion|tercer nivel o pregrado|presencial|loja|</td>
+      <td>{"row_index": 1935, "row_hash": "77fb5243c9963466966c248146af130cfffad92738bcb291301ef940a0d6adb2"}</td>
+    </tr>
+    <tr>
+      <td>e299a117-f101-49a1-a2a9-c891a2edebbf</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad nacional de loja|ciencias de la educacion mencion investigacion educativa|educacion|tercer nivel o pregrado|presencial|loja|</td>
+      <td>{"row_index": 1936, "row_hash": "77fb5243c9963466966c248146af130cfffad92738bcb291301ef940a0d6adb2"}</td>
+    </tr>
+    <tr>
+      <td>d65b90bc-3fcf-4227-aec5-695223dc371e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad nacional de loja|educacion basica|educacion|tercer nivel o pregrado|presencial|loja|</td>
+      <td>{"row_index": 1947, "row_hash": "4f7853e03511806534bc8b0995d785edcadd7710653d314c650a29c9715833c6"}</td>
+    </tr>
+    <tr>
+      <td>a9ca08e3-af6a-4e7f-9e45-6a632978f616</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad nacional de loja|informatica educativa|educacion|tercer nivel o pregrado|presencial|loja|</td>
+      <td>{"row_index": 1951, "row_hash": "223605ae85503fefe2b88b1c07e38bbe37a76241f7bb6858b56bba09f2f535f9"}</td>
+    </tr>
+    <tr>
+      <td>0b6f93d9-e7d7-4ec6-ac6b-91713b375806</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad nacional de loja|educacion basica|educacion|tercer nivel o pregrado|presencial|loja|</td>
+      <td>{"row_index": 1952, "row_hash": "4f7853e03511806534bc8b0995d785edcadd7710653d314c650a29c9715833c6"}</td>
+    </tr>
+    <tr>
+      <td>8cf2fd9b-ffa6-49cc-9428-1c06655f71d4</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica de ambato|maestria en diseno arquitectonico|ingenieria, industria y construccion|cuarto nivel o posgrado|presencial|tungurahua|ambato</td>
+      <td>{"row_index": 2316, "row_hash": "dffed439c033da455fb6025c624d4606148996f8488eef8e369f156d64c73ac0"}</td>
+    </tr>
+    <tr>
+      <td>85f8bcf2-257e-440a-ab69-739eac088187</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica de ambato|maestria en diseno arquitectonico|ingenieria, industria y construccion|cuarto nivel o posgrado|presencial|tungurahua|ambato</td>
+      <td>{"row_index": 2346, "row_hash": "dffed439c033da455fb6025c624d4606148996f8488eef8e369f156d64c73ac0"}</td>
+    </tr>
+    <tr>
+      <td>1f3197eb-3f0c-43a9-a2d5-6a3146e9df6c</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica luis vargas torres de esmeraldas|derecho|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial|esmeraldas|</td>
+      <td>{"row_index": 2507, "row_hash": "d999f213ddc388f347b961498b182901c20b0d63e429e336ff919d381b64a9e3"}</td>
+    </tr>
+    <tr>
+      <td>0919050f-39f9-4373-b262-5e84ddff1aa5</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica luis vargas torres de esmeraldas|derecho|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial|esmeraldas|</td>
+      <td>{"row_index": 2508, "row_hash": "d999f213ddc388f347b961498b182901c20b0d63e429e336ff919d381b64a9e3"}</td>
+    </tr>
+    <tr>
+      <td>f72439c4-ded2-49d5-80e8-47b5e94f3599</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica luis vargas torres de esmeraldas|ciencias de la educacion mencion historia y geografia|educacion|tercer nivel o pregrado|presencial|esmeraldas|</td>
+      <td>{"row_index": 2517, "row_hash": "13bb8e96b0a2fcb559a71a30491ada6e13e00d2086d334b078516b4c9f504ee9"}</td>
+    </tr>
+    <tr>
+      <td>a3d1ffbc-6732-4e5e-98a3-36d0319694c7</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica luis vargas torres de esmeraldas|administracion de empresas|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial|esmeraldas|</td>
+      <td>{"row_index": 2528, "row_hash": "d86b887191f99e9761d89850e3d0983d65a0d86acf4a9a63900097a0bdf6dcdf"}</td>
+    </tr>
+    <tr>
+      <td>2e2d4e6b-951c-4a60-8f5d-94714e6ba881</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica luis vargas torres de esmeraldas|ciencias de la educacion mencion historia y geografia|educacion|tercer nivel o pregrado|presencial|esmeraldas|</td>
+      <td>{"row_index": 2532, "row_hash": "13bb8e96b0a2fcb559a71a30491ada6e13e00d2086d334b078516b4c9f504ee9"}</td>
+    </tr>
+    <tr>
+      <td>9c854397-b2f3-4009-a09d-569eab0311f2</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica luis vargas torres de esmeraldas|administracion de empresas|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial|esmeraldas|</td>
+      <td>{"row_index": 2540, "row_hash": "d86b887191f99e9761d89850e3d0983d65a0d86acf4a9a63900097a0bdf6dcdf"}</td>
+    </tr>
+    <tr>
+      <td>2a26bdb2-4a9b-467a-a36f-3c7097fe6160</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica luis vargas torres de esmeraldas|administracion publica|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial|esmeraldas|</td>
+      <td>{"row_index": 2542, "row_hash": "d73dbbd5a5ba6af896be004a722b28154beb9c6475e3f19d8a8b135dd8a18407"}</td>
+    </tr>
+    <tr>
+      <td>b29ffb3f-7298-4863-b38c-7e407501772f</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica luis vargas torres de esmeraldas|administracion publica|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|esmeraldas|</td>
+      <td>{"row_index": 2543, "row_hash": "f99c52bc5986d428a391f31e78f6509d90c7a6a0f10a7f36c95438867dd773ec"}</td>
+    </tr>
+    <tr>
+      <td>7987df5d-ddc1-4537-b85e-edd053c3d9ac</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica luis vargas torres de esmeraldas|administracion publica|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|esmeraldas|</td>
+      <td>{"row_index": 2559, "row_hash": "f99c52bc5986d428a391f31e78f6509d90c7a6a0f10a7f36c95438867dd773ec"}</td>
+    </tr>
+    <tr>
+      <td>1e23747a-9ed4-4cb7-8094-2a4093889e4e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica luis vargas torres de esmeraldas|administracion publica|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial|esmeraldas|</td>
+      <td>{"row_index": 2560, "row_hash": "d73dbbd5a5ba6af896be004a722b28154beb9c6475e3f19d8a8b135dd8a18407"}</td>
+    </tr>
+    <tr>
+      <td>c245fcab-b9f3-4c9d-9abf-c57bfc9c3faf</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad estatal de bolivar|ciencias de la educacion mencion informatica educativa|educacion|tercer nivel o pregrado|semipresencial|bolivar|</td>
+      <td>{"row_index": 3160, "row_hash": "dace2e2210bd9712e48da0b2b40f7bfcf5249d5aaa2947a2c3752ae30365f24d"}</td>
+    </tr>
+    <tr>
+      <td>0a86da5e-7f8b-4f35-92e8-897438120c0c</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad estatal de bolivar|administracion|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|semipresencial|bolivar|</td>
+      <td>{"row_index": 3197, "row_hash": "d2964b8ba6bdec4df0c9f1e52bfeb95f42672317116506790f431fb54b747fac"}</td>
+    </tr>
+    <tr>
+      <td>ba5f1845-41fa-4461-8bfe-25b08d6217ee</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad estatal de bolivar|ciencias de la educacion mencion comercio y administracion|educacion|tercer nivel o pregrado|semipresencial|bolivar|</td>
+      <td>{"row_index": 3203, "row_hash": "cb182f9229dbc6b21b644050a8185187b99f71466f52679b3b6c3b9029a0bc09"}</td>
+    </tr>
+    <tr>
+      <td>c5ce64f6-c2ab-4925-9f6c-c1c0852120fc</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad estatal de bolivar|administracion|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|semipresencial|bolivar|</td>
+      <td>{"row_index": 3204, "row_hash": "d2964b8ba6bdec4df0c9f1e52bfeb95f42672317116506790f431fb54b747fac"}</td>
+    </tr>
+    <tr>
+      <td>5d48f4b9-9130-4080-a439-76d53b0d2df3</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad estatal de bolivar|ciencias de la educacion mencion educacion basica|educacion|tercer nivel o pregrado|semipresencial|bolivar|</td>
+      <td>{"row_index": 3205, "row_hash": "8cf6b2a6be0a27250df821a81eb22f93a4374d153114afb38364ede07f6592ad"}</td>
+    </tr>
+    <tr>
+      <td>fe7a1810-a181-4b9e-9904-8198876a2e15</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad estatal de bolivar|ciencias de la educacion mencion comercio y administracion|educacion|tercer nivel o pregrado|semipresencial|bolivar|</td>
+      <td>{"row_index": 3206, "row_hash": "cb182f9229dbc6b21b644050a8185187b99f71466f52679b3b6c3b9029a0bc09"}</td>
+    </tr>
+    <tr>
+      <td>eb4ce44d-d592-4933-a522-600003590343</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad estatal de bolivar|ciencias de la educacion mencion educacion basica|educacion|tercer nivel o pregrado|semipresencial|bolivar|</td>
+      <td>{"row_index": 3225, "row_hash": "8cf6b2a6be0a27250df821a81eb22f93a4374d153114afb38364ede07f6592ad"}</td>
+    </tr>
+    <tr>
+      <td>078e737e-8a05-4ebc-a03c-04c05ee5f94d</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad estatal de bolivar|ciencias de la educacion mencion informatica educativa|educacion|tercer nivel o pregrado|semipresencial|bolivar|</td>
+      <td>{"row_index": 3232, "row_hash": "dace2e2210bd9712e48da0b2b40f7bfcf5249d5aaa2947a2c3752ae30365f24d"}</td>
+    </tr>
+    <tr>
+      <td>34cf918d-2653-463c-9c56-8874dcf94724</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|enfermeria|salud y servicios sociales|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4809, "row_hash": "fe1fed5ae0da567aca61beb16d9be89a6e2c10d95a68bff869ac5b0da794a322"}</td>
+    </tr>
+    <tr>
+      <td>ac6436ab-36aa-4f57-b34e-a48bf8dddfe5</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria empresarial|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4811, "row_hash": "bc37ea967043bf27438ea0984f1258d4da37f5e8177f6178f1ccec75352cd052"}</td>
+    </tr>
+    <tr>
+      <td>289123e0-cfd8-4519-af0e-755182db974d</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria en contabilidad y auditoria|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4813, "row_hash": "7db1397d69e6b94eeb6afa49eb26cc6da560e4ba0bd89fcf36d08b4c6ee7e105"}</td>
+    </tr>
+    <tr>
+      <td>2a866587-6cfd-45a9-8f26-ffd96bd5564d</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria empresarial|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4814, "row_hash": "bc37ea967043bf27438ea0984f1258d4da37f5e8177f6178f1ccec75352cd052"}</td>
+    </tr>
+    <tr>
+      <td>858ae66f-5efc-4d0d-bf90-995c63bfc746</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria en contabilidad y auditoria|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4815, "row_hash": "7db1397d69e6b94eeb6afa49eb26cc6da560e4ba0bd89fcf36d08b4c6ee7e105"}</td>
+    </tr>
+    <tr>
+      <td>f98b5e8c-5c4c-481c-8891-35eeaf6ea7c1</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria empresarial|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4816, "row_hash": "bc37ea967043bf27438ea0984f1258d4da37f5e8177f6178f1ccec75352cd052"}</td>
+    </tr>
+    <tr>
+      <td>e2da4dec-75a7-4771-968c-eb00058b962c</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ciencias de la educacion mencion sicologia educativa y orientacion vocacional|educacion|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4817, "row_hash": "84c7dc3df1af5cab37ee0580fd629552888e7e142f4a6aa45d07437d94e30f31"}</td>
+    </tr>
+    <tr>
+      <td>447c0fbb-00af-45c7-826c-0faad6440b5d</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria de sistemas|ciencias|tercer nivel tecnico superior|presencial||</td>
+      <td>{"row_index": 4826, "row_hash": "df1ef2bcee6a6c0e42057f3e6cb91171cf5b2c3574654fe8fb61189f3277e579"}</td>
+    </tr>
+    <tr>
+      <td>b54f0818-4f5a-42c7-9d0b-651d044d5ede</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria de sistemas|ciencias|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4827, "row_hash": "84db3f42c976fc880329716a767ac560af091133d5b2b0ecd2aa2f89ef324698"}</td>
+    </tr>
+    <tr>
+      <td>b2de9a20-3b34-4547-b96c-1a86a95ec4d6</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|derecho|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4828, "row_hash": "10702e944a2e7975fd3d19643771e1ddb4af84d199a715573f7a267a49792562"}</td>
+    </tr>
+    <tr>
+      <td>96b73ca7-4899-424e-a22f-c81ddc4da260</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ciencias de la educacion mencion sicologia educativa y orientacion vocacional|educacion|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4830, "row_hash": "84c7dc3df1af5cab37ee0580fd629552888e7e142f4a6aa45d07437d94e30f31"}</td>
+    </tr>
+    <tr>
+      <td>35af7faa-7555-4936-94c9-5cc6534b00b7</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria en marketing|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4846, "row_hash": "66c95902a33d13f9a6f44c2623e2658c43cd789f5b8dc3cb95b8b002b4e850af"}</td>
+    </tr>
+    <tr>
+      <td>6d749e5b-16d3-4337-9a64-017936d1a0c8</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ciencias de la educacion mencion educacion inicial y parvularia|educacion|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4847, "row_hash": "111476ebf24c11f62aa29974cfb79c41f5c261c7ba6746135cbfaa65f5ccd73c"}</td>
+    </tr>
+    <tr>
+      <td>43723146-00af-4262-8220-29d8b52e75e2</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria de sistemas|ciencias|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4880, "row_hash": "84db3f42c976fc880329716a767ac560af091133d5b2b0ecd2aa2f89ef324698"}</td>
+    </tr>
+    <tr>
+      <td>4b2d4d29-b4c8-4d4b-9946-51ff897f2dbc</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|derecho|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4881, "row_hash": "10702e944a2e7975fd3d19643771e1ddb4af84d199a715573f7a267a49792562"}</td>
+    </tr>
+    <tr>
+      <td>a8955096-aeed-4632-b90b-94111f5eec6a</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria de sistemas|ciencias|tercer nivel tecnico superior|presencial||</td>
+      <td>{"row_index": 4882, "row_hash": "df1ef2bcee6a6c0e42057f3e6cb91171cf5b2c3574654fe8fb61189f3277e579"}</td>
+    </tr>
+    <tr>
+      <td>c01ed716-1519-4d85-9018-76ac1bc1804c</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria de sistemas|ciencias|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4883, "row_hash": "84db3f42c976fc880329716a767ac560af091133d5b2b0ecd2aa2f89ef324698"}</td>
+    </tr>
+    <tr>
+      <td>6e10120d-4e6c-47cb-9c53-719fe744b9e2</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ciencias de la educacion mencion educacion inicial y parvularia|educacion|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4890, "row_hash": "111476ebf24c11f62aa29974cfb79c41f5c261c7ba6746135cbfaa65f5ccd73c"}</td>
+    </tr>
+    <tr>
+      <td>5b01200c-8873-4cb3-b2db-ad5bc7880762</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|enfermeria|salud y servicios sociales|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4893, "row_hash": "fe1fed5ae0da567aca61beb16d9be89a6e2c10d95a68bff869ac5b0da794a322"}</td>
+    </tr>
+    <tr>
+      <td>52e7b793-02b9-4877-b766-cb0ada0cecd6</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria en contabilidad y auditoria|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4894, "row_hash": "7db1397d69e6b94eeb6afa49eb26cc6da560e4ba0bd89fcf36d08b4c6ee7e105"}</td>
+    </tr>
+    <tr>
+      <td>1cf519f1-c67f-4d64-8060-8cea8210c0b9</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria en marketing|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4895, "row_hash": "66c95902a33d13f9a6f44c2623e2658c43cd789f5b8dc3cb95b8b002b4e850af"}</td>
+    </tr>
+    <tr>
+      <td>b5b84e8d-ec24-4d58-8dec-85a1fc4e4b4a</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|derecho|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4896, "row_hash": "10702e944a2e7975fd3d19643771e1ddb4af84d199a715573f7a267a49792562"}</td>
+    </tr>
+    <tr>
+      <td>e782b3f9-a8e3-4c12-af52-389324ddf41f</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|ingenieria en marketing|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4905, "row_hash": "66c95902a33d13f9a6f44c2623e2658c43cd789f5b8dc3cb95b8b002b4e850af"}</td>
+    </tr>
+    <tr>
+      <td>19ed5d6d-ad98-492f-9c17-566bb6f61069</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|marketing|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4913, "row_hash": "254d7f11074e747985bb348d08de06aa42f334d73b0c025e8e2aa46bba97c47e"}</td>
+    </tr>
+    <tr>
+      <td>6de78503-7f9d-4854-919c-680257e447a6</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|marketing|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4914, "row_hash": "254d7f11074e747985bb348d08de06aa42f334d73b0c025e8e2aa46bba97c47e"}</td>
+    </tr>
+    <tr>
+      <td>08e4acd1-761c-47d1-88b5-27a97167b5f9</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|contabilidad y auditoria|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4917, "row_hash": "d60d2112f22de3929947c5414efc9b52ac0ffa2c8b4a4a82e017c2651b7f636f"}</td>
+    </tr>
+    <tr>
+      <td>32d4bd5a-74a6-48b9-bed7-b07d3afd57de</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|contabilidad y auditoria|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4918, "row_hash": "d60d2112f22de3929947c5414efc9b52ac0ffa2c8b4a4a82e017c2651b7f636f"}</td>
+    </tr>
+    <tr>
+      <td>0c0bca2f-31b6-4627-be30-2336ac20bfca</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|contabilidad y auditoria|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4921, "row_hash": "d60d2112f22de3929947c5414efc9b52ac0ffa2c8b4a4a82e017c2651b7f636f"}</td>
+    </tr>
+    <tr>
+      <td>e1aaea3c-cca9-4031-b7e7-a8484af7eb75</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|empresas|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4922, "row_hash": "14ba7ee7215fe59bebb18559208103234c173af5f9ed0885478a40fe3470ff72"}</td>
+    </tr>
+    <tr>
+      <td>fff258f1-8055-4e64-8bb2-a0556af102d8</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|empresas|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4923, "row_hash": "14ba7ee7215fe59bebb18559208103234c173af5f9ed0885478a40fe3470ff72"}</td>
+    </tr>
+    <tr>
+      <td>e76cd4ff-04ce-4dbb-bd56-a94f80f8d7b7</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad catolica de cuenca|empresas|ciencias sociales, educacion comercial y derecho|tercer nivel o pregrado|presencial||</td>
+      <td>{"row_index": 4924, "row_hash": "14ba7ee7215fe59bebb18559208103234c173af5f9ed0885478a40fe3470ff72"}</td>
+    </tr>
+    <tr>
+      <td>18ec65e0-558c-46ca-8f9c-3d07da28430f</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica particular de loja|maestria en pedagogia|educacion|cuarto nivel o posgrado|distancia|loja|loja</td>
+      <td>{"row_index": 5113, "row_hash": "5382f0c1e1e0e9b42f149fea46a92f057b0d302da6eedb74f6b42e4ece026f02"}</td>
+    </tr>
+    <tr>
+      <td>e14237bd-8db0-4905-b3a2-0e4de2b7554f</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica particular de loja|maestria en gerencia y liderazgo educacional|educacion|cuarto nivel o posgrado|distancia|loja|loja</td>
+      <td>{"row_index": 5124, "row_hash": "702ea85e3a236b8b1eb423bbc71ed551bfcbd8390ad4972b73ecfcd6d6dd2976"}</td>
+    </tr>
+    <tr>
+      <td>51335f11-5806-4f7e-9783-feb7b7b9cecd</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica particular de loja|maestria en gerencia y liderazgo educacional|educacion|cuarto nivel o posgrado|distancia|loja|loja</td>
+      <td>{"row_index": 5150, "row_hash": "702ea85e3a236b8b1eb423bbc71ed551bfcbd8390ad4972b73ecfcd6d6dd2976"}</td>
+    </tr>
+    <tr>
+      <td>fee66113-4c27-48e4-9c40-c12134e481a7</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>universidad tecnica particular de loja|maestria en pedagogia|educacion|cuarto nivel o posgrado|distancia|loja|loja</td>
+      <td>{"row_index": 5152, "row_hash": "5382f0c1e1e0e9b42f149fea46a92f057b0d302da6eedb74f6b42e4ece026f02"}</td>
+    </tr>
+    <tr>
+      <td>88bc0cdf-49e0-4b4e-8435-b66cff6f5b0b</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico "itca"|gestion turistica mencion gastronomia|servicios|tercer nivel tecnico superior|presencial|imbabura|ibarra</td>
+      <td>{"row_index": 7405, "row_hash": "89b0836a100908c9d259e8d0d92e5adcea93b721422b35f46327608ff401a114"}</td>
+    </tr>
+    <tr>
+      <td>ad3effc9-c465-4373-8c3a-8416642eba94</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico "itca"|administracion de empresas|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|semipresencial|imbabura|ibarra</td>
+      <td>{"row_index": 7406, "row_hash": "5c124f238de5e75e53d1f725e2fd32a531de9fa14a8654dfc8b318d2a1ca916d"}</td>
+    </tr>
+    <tr>
+      <td>3dda19d3-7d22-4bd6-9773-8fb4377bb106</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico "itca"|administracion de empresas|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|semipresencial|imbabura|ibarra</td>
+      <td>{"row_index": 7407, "row_hash": "2bfa0375b05fd75dd3c5b6eb7c288fc2f3c6e3bdd793994380e453a1185b2ce4"}</td>
+    </tr>
+    <tr>
+      <td>4ba5b4b3-b144-411d-858f-cedaf4b4d149</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico "itca"|gestion turistica mencion gastronomia|servicios|tercer nivel tecnico superior|presencial|imbabura|ibarra</td>
+      <td>{"row_index": 7411, "row_hash": "0776905fc8f983ae1ee9573481db6950b903b545350fc7776d42b698303af623"}</td>
+    </tr>
+    <tr>
+      <td>de5055b1-fd56-49fd-85da-8bc81505f2f7</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior ramon barba naranjo|tecnico superior en seguridad penitenciaria|servicios|tercer nivel tecnico superior|presencial|cotopaxi|latacunga</td>
+      <td>{"row_index": 7478, "row_hash": "4876bcb93fbc7a0da96f4487c00eb671ae097bca56410e29957f1c05fdd8cbd7"}</td>
+    </tr>
+    <tr>
+      <td>310c853f-65e6-480e-93d8-6a07eaa583c5</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior ramon barba naranjo|tecnico superior en seguridad ciudadana y orden publico|servicios|tercer nivel tecnico superior|presencial|cotopaxi|latacunga</td>
+      <td>{"row_index": 7480, "row_hash": "a147750780802558244e2e3bf04b1834f8dafcac5a820795f8aeb5c1bf68b3a4"}</td>
+    </tr>
+    <tr>
+      <td>e05e4463-1435-40f1-bc69-b159f0647b43</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|banca|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7529, "row_hash": "9a4d4a0c2abebb600e08ddca7e6f8e570580f7adecb9818f3edb4fa27c1b6cf6"}</td>
+    </tr>
+    <tr>
+      <td>791ac8ce-9969-4d98-af67-7ec6dfc8f2e0</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|comercio exterior|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7530, "row_hash": "5fec5d39f74365443ab1e9c1f0fbf636e0e2ca3113833863ee35fc9c2ddedc36"}</td>
+    </tr>
+    <tr>
+      <td>1baae422-f7fe-4ec7-8800-070ec35130f6</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|administracion financiera|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7534, "row_hash": "af33436cc18f1daa15941dbeaa27f68f8f58092c8e538999b44ef355eee329e9"}</td>
+    </tr>
+    <tr>
+      <td>e654c179-d548-4efd-a632-dd14ea666160</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|marketing|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7535, "row_hash": "0e00bf9e2b25e6a4486dc293a9c8d593e618db19219ca2721d6b50b1f57ec9b2"}</td>
+    </tr>
+    <tr>
+      <td>de7c3600-1af7-4f2e-ae14-f2ad6dc37881</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|gestion y distribucion empresarial|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7536, "row_hash": "f1d321bba1998736c7ac8f42cd7b6a3cadbe6d478ad3d3dd1ad79213bc13ae34"}</td>
+    </tr>
+    <tr>
+      <td>807ca2b5-6978-4493-a233-84792bc77360</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|analisis de sistemas|ciencias|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7538, "row_hash": "7101423bf395a39e8d7d0cd1da7bc9667b8e563ed4cf2a32f266a623d2661bf5"}</td>
+    </tr>
+    <tr>
+      <td>cc2970de-c782-4e5f-b5d1-a1b8b35eaf9d</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|administracion financiera|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7539, "row_hash": "bfe764f1638a953425b68d1d2c83857d542d822f268cfa5fe82bccec87f98a5b"}</td>
+    </tr>
+    <tr>
+      <td>47888221-e817-4307-8278-ca69abc93368</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|banca|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7540, "row_hash": "87761a71d0febad64548d0c12c40f8d7c49e3474cf9cbdd94bda91b09680a47e"}</td>
+    </tr>
+    <tr>
+      <td>5d01979b-f5e6-4b26-9009-c476b4d1b33a</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|comercio exterior|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7541, "row_hash": "1b1dd85c84c91e3995c21fae0187b24b086a8e5397bc692b406be3f36ce3ac6d"}</td>
+    </tr>
+    <tr>
+      <td>74c08167-bdc9-4d26-b7f5-afe7cce0b1b3</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|marketing|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7542, "row_hash": "a1203fab40e8a423b96ad254e645f7198d7d0b1ff8f426c7ef6f20f17e7478fd"}</td>
+    </tr>
+    <tr>
+      <td>718cf734-837b-443f-aa77-e36680a41ce4</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|gestion y distribucion empresarial|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7543, "row_hash": "fe22b24f159ffa4f79e769b97812f43e4da7c4a02c7294e0888448430ff5c7cc"}</td>
+    </tr>
+    <tr>
+      <td>676f2661-21cd-4947-a6b0-07cb960f293b</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto tecnologico superior esca|analisis de sistemas|ciencias|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7544, "row_hash": "64828c38ea22bcf02a57f908421e5b7e9a5dbb6563a3dd242e606dcffb2f6f5d"}</td>
+    </tr>
+    <tr>
+      <td>87a8bf9a-7b34-4700-a729-b1f15159d04e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|sistemas informaticos mencion redes|ciencias|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7573, "row_hash": "c506beefe11f0462670e856e02d52601210a63e395b8572914fa489ff93d5a1e"}</td>
+    </tr>
+    <tr>
+      <td>fcb50d59-505d-4057-9cb5-42e23ad88c1b</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|sistemas informaticos mencion redes|ciencias|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7574, "row_hash": "201c481eb48cab97907b71064851214575a7f521af468d190e8ef677f7f04f8f"}</td>
+    </tr>
+    <tr>
+      <td>0596dc9a-0a60-4c13-ab41-c7d6e2a623b9</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|negocios internacionales|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7575, "row_hash": "3147a45d6847d40566e8d0596bb47c3ce1a61aa26af1a0a211238404d9fb9262"}</td>
+    </tr>
+    <tr>
+      <td>2900ee18-a2eb-46ce-8bb4-db63bdbb165e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|negocios internacionales|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7576, "row_hash": "3b8b91267a487a15981eb30aafdc06340b9de4317bb0eecf5cafd5539f4bb82d"}</td>
+    </tr>
+    <tr>
+      <td>5ee7504b-c3bd-4480-86d9-8861d7360616</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|turismo mencion trafico aereo y transportes turisticos|servicios|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7577, "row_hash": "710f1d720dfc3c70a7aca703c9fd4613ae06f2030c189cf77e1e01c22463b7a6"}</td>
+    </tr>
+    <tr>
+      <td>cbef7b73-0348-4d3c-84fc-93914bd123f7</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|turismo mencion trafico aereo y transportes turisticos|servicios|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7578, "row_hash": "68ecf5e172093898155ffc50a634c85d33719f058f635ecd69f547f5b766c1b0"}</td>
+    </tr>
+    <tr>
+      <td>6111459b-9025-4446-aa56-8360bb74aa0f</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|diseno grafico multimedia|humanidades y artes|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7581, "row_hash": "39f13f65afb8963febfbdb5be59e679052d31d5fc2197c65397401dc5ecb2960"}</td>
+    </tr>
+    <tr>
+      <td>bbfff25c-b5d3-4c27-a647-4f825686c5d3</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|diseno grafico multimedia|humanidades y artes|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7582, "row_hash": "63170c02782dbaa161c2c3c4ee0f905487eaf2608a7421538dadeaa7f3667a0d"}</td>
+    </tr>
+    <tr>
+      <td>44522688-d1b6-44ce-9657-d40b908d4f1e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|sistemas informaticos mencion analista de sistemas|ciencias|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7587, "row_hash": "dd531346d66a4bc438d6a5e1e9f33f2eedbf8b19b5064422d232104e1495f182"}</td>
+    </tr>
+    <tr>
+      <td>52a4a91b-8775-4782-8303-f3cacfae9bbc</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|marketing|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7588, "row_hash": "0e533969250f0d22e5844c3b9fafb7e59ff711dfa614b8dd8028f4dd052d8609"}</td>
+    </tr>
+    <tr>
+      <td>c04135bf-c923-4e9c-bc29-5ed1b1937fa8</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|marketing|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7589, "row_hash": "6d2a7866605d654e786b7c618002f02f245470852bb0a205e657c5fb4e2c2f5c"}</td>
+    </tr>
+    <tr>
+      <td>286728fe-a879-4707-b2fc-62a15cac3eeb</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|gestion empresarial mencion seguros y riesgos|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7596, "row_hash": "08263f11b82b2cffdda785c4b4a5aee98c0ccffb9be0ffa4ce8440840ec94e38"}</td>
+    </tr>
+    <tr>
+      <td>22bbc714-450c-4223-9126-f716beec2305</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|gestion empresarial mencion seguros y riesgos|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7597, "row_hash": "7a5746e96181f0f663933afe808b8e3e82dedb2fbfb7b216bf31c25775b22d5c"}</td>
+    </tr>
+    <tr>
+      <td>2aa8d877-c1d1-4035-b1c7-7372fa84f651</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|turismo mencion guianza turistica|servicios|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7598, "row_hash": "196a39f604f45e158ceee6904e6cb307f1b75a1150d3054442b42b75449b58bf"}</td>
+    </tr>
+    <tr>
+      <td>9de58261-9be2-47e1-80fa-78ebe695a707</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|turismo mencion guianza turistica|servicios|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7599, "row_hash": "efa254d19046045ae50d725573ef4a99f177b954166b08aa4e0a0e32f51c6a4b"}</td>
+    </tr>
+    <tr>
+      <td>d1202b31-ee6c-4f82-b252-00face72f0a3</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|sistemas informaticos mencion internet|ciencias|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7601, "row_hash": "efe028d9322507ce582cb2762175b7cd9ddda618d686a6648eb166bd2d6d82a1"}</td>
+    </tr>
+    <tr>
+      <td>d8049f25-6776-48f2-b5b3-570a114ba8e2</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|sistemas informaticos mencion internet|ciencias|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7602, "row_hash": "f654678ef29639b58f5098c2828b0d3e129343aa8b204ba762cb1ad2130a85fc"}</td>
+    </tr>
+    <tr>
+      <td>b70c6ec7-cbbb-4bad-b309-c71a975f98c5</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico espiritu santo|sistemas informaticos mencion analista de sistemas|ciencias|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 7603, "row_hash": "28d6e2832adea213e9b8a8660675442d112494159895d78798806d197d00f4b8"}</td>
+    </tr>
+    <tr>
+      <td>ad1e8158-a920-49dd-8de8-1eef458a8ff3</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico del austro|mecanica automotriz|ingenieria, industria y construccion|tercer nivel tecnico superior|presencial||</td>
+      <td>{"row_index": 7691, "row_hash": "31ede112da2700d8724ada3361977aa4c3027f565dbe3faf48d9a38172a85c51"}</td>
+    </tr>
+    <tr>
+      <td>e2bbae46-7022-4511-a316-63e05dafabe1</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico del austro|mecanica automotriz|ingenieria, industria y construccion|tercer nivel tecnico superior|presencial||</td>
+      <td>{"row_index": 7698, "row_hash": "31ede112da2700d8724ada3361977aa4c3027f565dbe3faf48d9a38172a85c51"}</td>
+    </tr>
+    <tr>
+      <td>424ebc0d-cc3f-465d-9123-96f42dce35ab</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico dismod|diseno de modas|humanidades y artes|tercer nivel tecnico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 7719, "row_hash": "4473f8437075c3ecb358c74bf9271bfb333ace084671cfdaa867bbeb3831340e"}</td>
+    </tr>
+    <tr>
+      <td>120241c1-2ea3-4aef-aead-28f92d30d1bb</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico dismod|diseno de modas|humanidades y artes|tercer nivel tecnico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 7720, "row_hash": "c9ec4a58142bdf9fa4b96e20ffe5305b6fc01c58b778b1e401c80b6d0a49872c"}</td>
+    </tr>
+    <tr>
+      <td>e9bab87b-f2c2-4ed4-9cd4-ce44115dae6e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico consulting group ecuador - esculapio (istcge)|naturopatia|salud y servicios sociales|tercer nivel tecnico superior|semipresencial|pichincha|quito</td>
+      <td>{"row_index": 7734, "row_hash": "ec2fd296e9d7e908f560fa163d85d93fc79624c15b497e071c39b25cb6a5e2ff"}</td>
+    </tr>
+    <tr>
+      <td>6bc6ae6d-87ca-4f3e-972f-ab14ab7167d2</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico consulting group ecuador - esculapio (istcge)|naturopatia|salud y servicios sociales|tercer nivel tecnico superior|semipresencial|pichincha|quito</td>
+      <td>{"row_index": 7735, "row_hash": "372ea0903d80d069b2754865c63ee013b66b2f0f4f7b7e0c075743366adaa84d"}</td>
+    </tr>
+    <tr>
+      <td>57f411d1-d03b-4ede-b8be-f291de1feff5</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico policia nacional|tecnico superior en seguridad ciudadana y orden publico|servicios|tercer nivel tecnico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 7838, "row_hash": "6cb3685f6b8734a5fd3a3e07812d19a19e681d21038d27de406e1be580cbb2ee"}</td>
+    </tr>
+    <tr>
+      <td>81666bc3-f6a2-4294-8d15-ac110a5a8869</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico quito|analisis de sistemas|ciencias|tercer nivel tecnico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 7862, "row_hash": "1c88a0461211f1467f6c2f065cd004c0f6de76d8caaa450ac9585f1ac353f5ab"}</td>
+    </tr>
+    <tr>
+      <td>1b51e0b5-c987-4524-b5f7-360ca7eac0bb</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico quito|analisis de sistemas|ciencias|tercer nivel tecnico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 7863, "row_hash": "6238f199702f17ffc0f73b471becfae4370859d95a40c41e646ad3651ad0c8f9"}</td>
+    </tr>
+    <tr>
+      <td>6f32ea75-87b0-4168-8f1d-caa4e77ebe2f</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico quito|comercio electronico|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 7864, "row_hash": "5e2a792509df5ac6cd55bfb003c9731d314d7857c0168046b02dd1a611b59a10"}</td>
+    </tr>
+    <tr>
+      <td>75537283-b6c0-4fec-ba97-3d448ff2a45f</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico quito|comercio electronico|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 7865, "row_hash": "8dd57aa781983eaa3924fd014e379e62753e04ed022efc5288d9c41aabe82543"}</td>
+    </tr>
+    <tr>
+      <td>bcbde4c1-9166-479a-b58f-badbfc190d3e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior pedagogico intercultural bilingue canelos|docencia en educacion basica intercultural bilingue|educacion|tercer nivel tecnico superior|presencial|pastaza|</td>
+      <td>{"row_index": 8244, "row_hash": "d376c33f8bf7a2ffdd8d804d7a63843a7110558539426843c4b5a6c24099629a"}</td>
+    </tr>
+    <tr>
+      <td>60b3e4c8-ee72-4da1-a05a-225c229242ed</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior pedagogico intercultural bilingue canelos|docencia en educacion basica intercultural bilingue|educacion|tercer nivel tecnico superior|presencial|pastaza|</td>
+      <td>{"row_index": 8245, "row_hash": "d376c33f8bf7a2ffdd8d804d7a63843a7110558539426843c4b5a6c24099629a"}</td>
+    </tr>
+    <tr>
+      <td>f6787367-b41c-4620-bcb7-663a6be46633</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico vicente rocafuerte|promocion de la salud|salud y servicios sociales|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 8256, "row_hash": "9ce8c23a6b29c94640d253975e1cb8f30b7a2b01ff69b9ac1746e246ca63ff06"}</td>
+    </tr>
+    <tr>
+      <td>e6418050-abd2-43fe-9bfc-c9657a0707f8</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico vicente rocafuerte|promocion de la salud|salud y servicios sociales|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 8257, "row_hash": "48481dc51066cdde66f34ed30502741e5892f3c69835da51ae6e4604dce1d8b5"}</td>
+    </tr>
+    <tr>
+      <td>68857255-5c5e-4753-a385-c9bb9bcaecd3</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico vicente rocafuerte|banca y finanzas|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 8258, "row_hash": "9d6f20a656eceea7d054a0f922ffaa5aa6b538a800a7af2014f25a8ebc737e1e"}</td>
+    </tr>
+    <tr>
+      <td>d3dadaba-bb23-499f-9a69-55f444f4cf50</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico vicente rocafuerte|banca y finanzas|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 8259, "row_hash": "1b85d9033b6bced6a5124d439b18cfdd2b3cb90120be552816fcaf41cbbef747"}</td>
+    </tr>
+    <tr>
+      <td>f7b52c93-cecc-43d8-b5a8-43105619bf77</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico vicente rocafuerte|hoteleria y turismo|servicios|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 8260, "row_hash": "3854ee08abd8e93a46d30a97edd588340817db6c6207bb7ec61460438c801a08"}</td>
+    </tr>
+    <tr>
+      <td>2e49aa75-19ba-409d-b3e5-8630f6502dc8</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico vicente rocafuerte|hoteleria y turismo|servicios|tercer nivel tecnico superior|presencial|guayas|guayaquil</td>
+      <td>{"row_index": 8261, "row_hash": "1349e40830e957d41096a6608ad7e7d800dbd7c51ac48a57e42e6f9b8cc48367"}</td>
+    </tr>
+    <tr>
+      <td>ca8df092-40ff-434a-8d6d-3cd85f1c3a93</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico bolivariano|contabilidad tributaria|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|loja|loja</td>
+      <td>{"row_index": 8303, "row_hash": "861ff421a4babcf23d9080a7771adc1096461f336a62ea17153338b556a3841e"}</td>
+    </tr>
+    <tr>
+      <td>328d1ce4-b0c1-4425-8dfe-be09228ead93</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico bolivariano|contabilidad tributaria|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|loja|loja</td>
+      <td>{"row_index": 8304, "row_hash": "f93f9d31e56a75548d55871b6fd083062dc4caee36fd0b409d5168300ac92a4c"}</td>
+    </tr>
+    <tr>
+      <td>a42f9b60-9796-4477-816a-20147f09423e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico bolivariano|marketing y publicidad|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|loja|loja</td>
+      <td>{"row_index": 8306, "row_hash": "5e23fe1dcbbbda4478ef13de12e2d5c16de013037b1398316a86e134d1cd1e63"}</td>
+    </tr>
+    <tr>
+      <td>846dbda3-e0b1-497d-b282-a02d6e0223a8</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico bolivariano|marketing y publicidad|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|loja|loja</td>
+      <td>{"row_index": 8307, "row_hash": "d9634938c8b634107331dea59224d6b56ae5fb826f08625f439911ff10d8a1fe"}</td>
+    </tr>
+    <tr>
+      <td>fc235680-fdc5-4606-b6b0-42d202c24e5d</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico new generation|contabilidad de costos|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|chimborazo|riobamba</td>
+      <td>{"row_index": 8322, "row_hash": "63488cebfc9ad2db038f3eeb4311c57424782a0c7b02a570817be0b1e4edb9a4"}</td>
+    </tr>
+    <tr>
+      <td>5a66d38b-4c44-4373-af94-e272d5aa9523</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico new generation|contabilidad de costos|ciencias sociales, educacion comercial y derecho|tercer nivel tecnico superior|presencial|chimborazo|riobamba</td>
+      <td>{"row_index": 8323, "row_hash": "5fb49d14824444f6e8a8b7bbff49f2271c2e005d1b35b08e659317d9482d369a"}</td>
+    </tr>
+    <tr>
+      <td>a9dbc167-3065-411e-89e1-a3234c1285dd</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>instituto superior tecnologico cotopaxi|tecnico superior en seguridad penitenciaria|servicios|tercer nivel tecnico superior|presencial|cotopaxi|latacunga</td>
+      <td>{"row_index": 8352, "row_hash": "4b3665dc8ea79dbfc99546e3d174a9f1cf98377f38b606a7f49148f4c70af7cc"}</td>
+    </tr>
+    <tr>
+      <td>f4e6a316-8a95-4bf4-b17b-12614902b002</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|tecnologia superior en redes y telecomunicaciones|tecnologias de la informacion y la comunicacion (tic)|tercer nivel tecnologico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 8380, "row_hash": "8f50b313d27ccdd5c00be6bc907f1eea400844bbcc30e12d593235683b6ee5f0"}</td>
+    </tr>
+    <tr>
+      <td>805a34bb-ae8b-4390-9b10-101647ba20cc</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|tecnologia superior en redes y telecomunicaciones|tecnologias de la informacion y la comunicacion (tic)|tercer nivel tecnologico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 8381, "row_hash": "d424321f7abb4149114586efa28721d4535bc8c449ba97f8c3a01b3a15da25e9"}</td>
+    </tr>
+    <tr>
+      <td>cdb034d8-bec4-475e-8b5a-1f696b903d30</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|tecnologia superior en desarrollo de software|tecnologias de la informacion y la comunicacion (tic)|tercer nivel tecnologico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 8382, "row_hash": "8678f2c030dac375bd869d21d428c2e893e6933888278ec45ec1009285e6330a"}</td>
+    </tr>
+    <tr>
+      <td>b247c0fd-c3d2-49c4-ae00-8d8b8f776510</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|tecnologia superior en desarrollo de software|tecnologias de la informacion y la comunicacion (tic)|tercer nivel tecnologico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 8383, "row_hash": "02a3f1c8294d06580537c5de681e07f71868facfd2729aceea938c8fc81b60d3"}</td>
+    </tr>
+    <tr>
+      <td>f110be8b-3847-4b40-ad74-87bdf14e6088</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|tecnologia superior en electromecanica|ingenieria, industria y construccion|tercer nivel tecnologico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 8386, "row_hash": "f6e712bbfd461dd2bb3b553c02a42fbe6d58ac305fc74bae91bc7bba23c468f4"}</td>
+    </tr>
+    <tr>
+      <td>babdf62f-5b9b-4395-af5e-30736d5e0d0c</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|tecnologia superior en electromecanica|ingenieria, industria y construccion|tercer nivel tecnologico superior|presencial|pichincha|quito</td>
+      <td>{"row_index": 8387, "row_hash": "8f5dffb146b26ad53478ed71a96fc6d643b7282338d9c2f4cda3c5ae2c461a4d"}</td>
+    </tr>
+    <tr>
+      <td>4d5d3254-61c3-4cee-9bec-9dfd9d77a7e2</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|economia|ciencias sociales, periodismo, informacion y derecho|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8390, "row_hash": "c1f2c0f2c5bddd7ad8638b82c5fe8791e826363fdeb2e35681a215f2e2f8b4bc"}</td>
+    </tr>
+    <tr>
+      <td>617be543-b279-4a62-82ab-1883fdfcf5b1</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|economia|ciencias sociales, periodismo, informacion y derecho|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8391, "row_hash": "f81d6aa83d7eb8c1c09022968a5f57201c82565254847a2cd4008022a4e31317"}</td>
+    </tr>
+    <tr>
+      <td>ddf9ff86-f0e8-4425-9d8e-d4371cd048e5</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|geologia|ciencias naturales, matematicas y estadistica|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8393, "row_hash": "a7b46e55741eed960fe4a7f23ea28fe96138ddb4516d5b6004c085a70003a2dd"}</td>
+    </tr>
+    <tr>
+      <td>570946ae-10dd-4a2d-830a-1d1333de9a67</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|geologia|ciencias naturales, matematicas y estadistica|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8394, "row_hash": "08e8019579f8ded3e7634768f24d62826ed2abfa1a82ab4f741a666b553c528d"}</td>
+    </tr>
+    <tr>
+      <td>c23fed9b-c031-4d71-82ec-24b7531560b4</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|fisica|ciencias naturales, matematicas y estadistica|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8395, "row_hash": "45c1142389073fefa80655bb236610444e0b188ed99d87659980e5afa23271cd"}</td>
+    </tr>
+    <tr>
+      <td>e84c8369-9d13-4e83-a2cd-96031b202232</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|fisica|ciencias naturales, matematicas y estadistica|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8396, "row_hash": "ba069cdbfa1a7d399f3bf21e2c158635153546c5e0c0e89772940551e9910bfc"}</td>
+    </tr>
+    <tr>
+      <td>303fe986-5b01-41d0-985e-8f2fe7555285</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|matematica|ciencias naturales, matematicas y estadistica|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8397, "row_hash": "42c3f647cd34ccbdfdd21aaf3f699244398234478eb89caa8c8817baf28e70f7"}</td>
+    </tr>
+    <tr>
+      <td>0d3671e8-34ef-451a-838b-8fd69177824f</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|matematica|ciencias naturales, matematicas y estadistica|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8398, "row_hash": "80c44839d25846619d3aec80d87e68d25d8f71df96efb8ed83afae537373973b"}</td>
+    </tr>
+    <tr>
+      <td>15b30937-46e5-400e-ac2d-f6136b14d13e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|matematica aplicada|ciencias naturales, matematicas y estadistica|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8399, "row_hash": "057e011871f7277547d0d6c684ef32784bf609b2a235abf47daafc339da28f79"}</td>
+    </tr>
+    <tr>
+      <td>86da57ad-68e9-4d3d-936e-8db63fda79c0</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|matematica aplicada|ciencias naturales, matematicas y estadistica|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8400, "row_hash": "9d628b28ec5d287a91df7d183b6a87d408840624666e6d8d3cfc37baae1b2267"}</td>
+    </tr>
+    <tr>
+      <td>735d308f-cdc7-4b4c-99e9-208cc593dd83</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|computacion|tecnologias de la informacion y la comunicacion (tic)|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8401, "row_hash": "2e7443e218eba8f8420e9207d8e5c4bcb7894838736543761648294c804e638d"}</td>
+    </tr>
+    <tr>
+      <td>88ba6004-7f95-400d-b571-1086aded9fd3</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|computacion|tecnologias de la informacion y la comunicacion (tic)|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8402, "row_hash": "b9e7cfb8f2be2ffcf59a3357ad2365c5b6e04a99c1205afc731e31bf8473ca6d"}</td>
+    </tr>
+    <tr>
+      <td>5a9e86b9-7747-4bb8-bef7-f0c9871fb4d0</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|tecnologias de la informacion|tecnologias de la informacion y la comunicacion (tic)|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8404, "row_hash": "f292d2801d577edeab5a46a6ca989051b331979bb1127da4343b48072831abc2"}</td>
+    </tr>
+    <tr>
+      <td>5172c870-5eb4-4d2d-a9dc-95125824eecd</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|tecnologias de la informacion|tecnologias de la informacion y la comunicacion (tic)|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8405, "row_hash": "292057a884373e038b9c0407571e89646f4317c0fe8e1d11938d4229ff50f815"}</td>
+    </tr>
+    <tr>
+      <td>b897d38f-5682-411b-a5c5-9a6e992b2409</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|software|tecnologias de la informacion y la comunicacion (tic)|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8407, "row_hash": "cbb48a0c87859a1d3bebcfacf475215eeeb1d9991c2d91d04a9546cf790c9e81"}</td>
+    </tr>
+    <tr>
+      <td>3b211997-5d7c-4e9d-9bed-b57b6000f647</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|software|tecnologias de la informacion y la comunicacion (tic)|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8408, "row_hash": "57ca07dbe198cd6fb802546b9c1a450672664116e44d94ea95ba2e87f9559abc"}</td>
+    </tr>
+    <tr>
+      <td>071b7509-5ffc-4bd4-8254-d5726f142b37</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|ingenieria quimica|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8410, "row_hash": "2416d8c628bae331ae0d927ed8dfd9d7d2b4ddb69b29c214aaca79526808ee11"}</td>
+    </tr>
+    <tr>
+      <td>16c8ee32-57e2-46d3-997f-4ea7189c52df</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|ingenieria quimica|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8411, "row_hash": "96f7b320819c62d807ca071f56742a29ad31874ef135e52077ba980e20bf2fac"}</td>
+    </tr>
+    <tr>
+      <td>c2d65987-b311-4755-8fe9-46cabb2dd4bb</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|ingenieria ambiental|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8412, "row_hash": "79d2777819ec2a6254a553044158fe9aafd30759acffbcce9c802ce0eca21b3f"}</td>
+    </tr>
+    <tr>
+      <td>14e74d90-a39c-4f01-a0f9-2073309b0bca</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|ingenieria ambiental|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8413, "row_hash": "7b028cbdadef6718b54ea1e9d7d593e24c462654620054a89d8b12eb9c3466cc"}</td>
+    </tr>
+    <tr>
+      <td>f5f5894e-4ec9-4f6f-9b6b-6ff43635cb45</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|electricidad|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8414, "row_hash": "e34d603110744f87016d76e5ccd27486a915c0193050f449429efe5bf31eefd6"}</td>
+    </tr>
+    <tr>
+      <td>148b316b-2554-430b-b002-16dd85f9edb4</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|electricidad|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8415, "row_hash": "f8e67cdbfbf5cf64e5f04aa30385f5c59ff04ff9e8fa79fdce0c5c22da87bf33"}</td>
+    </tr>
+    <tr>
+      <td>608e5abf-f781-4e8c-a83e-bd21065945bc</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|electronica y automatizacion|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8416, "row_hash": "545feeea88647221f06cc45f473a97820a6716e25a263fc720dd7f173b4e5dea"}</td>
+    </tr>
+    <tr>
+      <td>fbd5cd87-d234-4996-81e6-6e98678156c6</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|electronica y automatizacion|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8417, "row_hash": "dd8c8c4317c31edf225cfc22789184acea145bb4081192c93b9bbad2981570a1"}</td>
+    </tr>
+    <tr>
+      <td>230ef7f5-56c9-4ae2-ac86-d41d30054ed5</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|mecanica|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8418, "row_hash": "d71d72538b13583af7db2952c403a2640b863d1b46269126c3e76c30d130847c"}</td>
+    </tr>
+    <tr>
+      <td>1d1242e3-db06-4aee-99c5-55b8b555e4e1</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|mecanica|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8419, "row_hash": "6f115993364626f3e0ec8c87c18507baa1e7aed0441c5afc17f9a84c0aa9147e"}</td>
+    </tr>
+    <tr>
+      <td>542d5550-7328-496f-adc9-20441b85e676</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|telecomunicaciones|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8421, "row_hash": "cc3929742cb6e83038320c4361d7be12f780dba6bd661a9e07cb97e41b8916fd"}</td>
+    </tr>
+    <tr>
+      <td>2fbe7ed5-cafe-4f3e-8851-f1b0598e7692</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|telecomunicaciones|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8422, "row_hash": "c1852a694d7cba610bef136e1ccaebf3857b23c47dd595237fa36d8d9c485487"}</td>
+    </tr>
+    <tr>
+      <td>24e2dac0-9a45-4a07-9c08-23f1b46e0808</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|agroindustria|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8423, "row_hash": "1fb66e781193660d7407137585192b4f1278553ee78c1e6e097b158677c814d6"}</td>
+    </tr>
+    <tr>
+      <td>f21b1064-bb9c-4a95-af1d-15cd037d306f</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|agroindustria|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8424, "row_hash": "4b0a8858576c857bab1b2b7bf41e834ae9c33e709868640685519acf3b01f481"}</td>
+    </tr>
+    <tr>
+      <td>76118b8e-1215-454b-81e3-acc1b31629c5</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|petroleos|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8426, "row_hash": "4148e1d287c6acca024a5bfdb02f20da4220888c5a8ca0db4d3f10c165bc44d2"}</td>
+    </tr>
+    <tr>
+      <td>b459734e-e74e-4b40-90ae-55a1dcf9ca24</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|petroleos|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8427, "row_hash": "fd8c8bd5eae9a110375389b38f7ff90cc3f1349608b41a6c9694ded47f59296a"}</td>
+    </tr>
+    <tr>
+      <td>783746eb-e289-400e-8550-f6e8b11ca796</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|ingenieria de la produccion|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8428, "row_hash": "3e8c65e63e272ab473cc98fcde35d3d8c3c013e020ef6b3c3bbe70872de8ff88"}</td>
+    </tr>
+    <tr>
+      <td>8e7ee392-3537-4951-8a78-a0d52fd6ec8e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|ingenieria de la produccion|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8429, "row_hash": "1632fa9887e7a4c7c88eedcfcefdd3a0ba3aa5530d9102772a08f0a665ef28ab"}</td>
+    </tr>
+    <tr>
+      <td>b786cad4-c6c7-4640-9bfa-b5cfedd745e2</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|ingenieria civil|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8430, "row_hash": "2ea8bfc0ddfb9abf3a504314f6acc302d893fdb27c9c33e713d6cec58a3f573e"}</td>
+    </tr>
+    <tr>
+      <td>6552ded2-82ad-4ebe-baeb-f40f046a3027</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|ingenieria civil|ingenieria, industria y construccion|educacion superior de grado o tercer nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8431, "row_hash": "76fc4786da57b22d5a1d68bb3d54b8e832593c3f3c76b76d3f7789c119cab642"}</td>
+    </tr>
+    <tr>
+      <td>b190e15d-6d58-4180-bfd9-b69b0835befe</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|gestion de la ciencia y la tecnologia|administracion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8432, "row_hash": "6e009afcf79bd98176c47ee3439a29efbbe5ae6e19574f807939d7225bcaa810"}</td>
+    </tr>
+    <tr>
+      <td>58eb2a3b-8b48-4d32-8075-f9337d5e8af7</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|gestion de la ciencia y la tecnologia|administracion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8433, "row_hash": "802cc38a9b9f6ceb8443afe99b6cf8dcb437e6e0f631d27b0e158283dbb5ecea"}</td>
+    </tr>
+    <tr>
+      <td>636af65e-dcab-49de-87f3-9f21bb5dc31a</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|biociencias aplicadas|ciencias naturales, matematicas y estadistica|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8434, "row_hash": "4e6c92d91b3f68053572b843ec6b2977da0e4ca236ac72138faa994b819d398a"}</td>
+    </tr>
+    <tr>
+      <td>75e17bc3-cb82-4682-8195-6ad62a7beac6</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|biociencias aplicadas|ciencias naturales, matematicas y estadistica|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8435, "row_hash": "9dab8959916dd7192eeccfa320fcdd001590b3a506d0aa1050c8f3c84404e909"}</td>
+    </tr>
+    <tr>
+      <td>0c79649e-b5e1-42bd-8872-9bfa0f1d9717</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|optimizacion matematica|ciencias naturales, matematicas y estadistica|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8438, "row_hash": "3445be2be400ffd39eebcc2f06c0e329f3428789f5944a426cce568b801f2d43"}</td>
+    </tr>
+    <tr>
+      <td>e92e9858-4bea-4743-9aaf-454234b0dc5b</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|optimizacion matematica|ciencias naturales, matematicas y estadistica|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8439, "row_hash": "4d69bd1f9d5a35623a5109cb170dd87004065e28d2648d2f0f868a068ab9584f"}</td>
+    </tr>
+    <tr>
+      <td>a54e1882-4682-41a4-9c6e-c113f1db44bf</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|computacion|tecnologias de la informacion y la comunicacion (tic)|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8440, "row_hash": "015c0959e0911651be55980e091a1bdd0a1fdd23abe9f1256429d1a97c6fd4bf"}</td>
+    </tr>
+    <tr>
+      <td>1eba16cb-a4e2-4fa1-a736-76fb85293acb</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|computacion|tecnologias de la informacion y la comunicacion (tic)|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8441, "row_hash": "57af27f86b5b00e86429535e2914523b3db84ba701efbdcc89974daaef675ddb"}</td>
+    </tr>
+    <tr>
+      <td>0feacc1f-e1e7-4c71-a3fa-45e9f76e3a42</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|metalurgia|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8444, "row_hash": "efab8090ceae003ac5e99f8bfdc83adf9d69e49ee701a1f5ee481797455cb816"}</td>
+    </tr>
+    <tr>
+      <td>73b464c6-8ce2-429b-a5d3-f7caad607d2e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|metalurgia|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8445, "row_hash": "dff27fca70cd05c07f12d2dbe8fd52bfa85ede96521c53c34317e5d605ba3183"}</td>
+    </tr>
+    <tr>
+      <td>00d32afd-2e8e-44a9-8211-e2f9bddcd49d</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|materiales|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8448, "row_hash": "6681c5abfd83827ebb29101a98c2937381b331d05f0e15a743362b947f500023"}</td>
+    </tr>
+    <tr>
+      <td>5ad8d9a1-80ae-4efc-9966-b071071318c4</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|materiales|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8449, "row_hash": "61b3fc1d47ec0eb680e1e7f4df33d62a531401eaf785662da3cff5dd2d2850d8"}</td>
+    </tr>
+    <tr>
+      <td>f2e33372-4ccd-452b-b7fd-00a4609c93d5</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|software|tecnologias de la informacion y la comunicacion (tic)|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8456, "row_hash": "daa12bb777bd6b43f3618c184e3d9d3ff5ba9d8adeb1596fa5cb7ad078124203"}</td>
+    </tr>
+    <tr>
+      <td>86b568ec-da84-48b5-9e4a-7999cae3935e</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|software|tecnologias de la informacion y la comunicacion (tic)|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8457, "row_hash": "896b704c1a4a8e4ab2b62ed5ee2870040da1cb6111bbbe60d2860ce96747679f"}</td>
+    </tr>
+    <tr>
+      <td>ec40df5e-eb47-4917-8fea-089a73b826af</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|sistemas de informacion|tecnologias de la informacion y la comunicacion (tic)|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8458, "row_hash": "17ad8ead22f80d7fe0d8b2a27752aea253e15ad168fbbe50f3c7e546d952c1f0"}</td>
+    </tr>
+    <tr>
+      <td>bad481ce-fef5-4164-b0b1-e4c282a57b6b</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|sistemas de informacion|tecnologias de la informacion y la comunicacion (tic)|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8459, "row_hash": "a0bfd9e6df9ad3ee3b92426e17e4f0ffcb86e99c1e4fdf9f6e4666e517e5eff2"}</td>
+    </tr>
+    <tr>
+      <td>04d458e6-db2d-4767-b379-a386c920653c</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|sistemas automotrices|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8464, "row_hash": "cf52c775d9b70677ab23453a43a1c2b67fa26abc56483b05fd080bf7d97c9d42"}</td>
+    </tr>
+    <tr>
+      <td>3fc2a1f4-725c-425b-bae2-6d6991bf6140</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|sistemas automotrices|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8465, "row_hash": "f9222a45fc4f5a9664bdb40194c10b3be09f92a4ca72b0b02459e7719be709bb"}</td>
+    </tr>
+    <tr>
+      <td>f8e6978e-04f1-483d-857c-10ab924311ac</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|mecatronica y robotica|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8466, "row_hash": "f80f9e2b785335243133681322de0a900f9564d0dbcf41998484a4b4404267d1"}</td>
+    </tr>
+    <tr>
+      <td>99238e93-1f06-40d5-b363-1dfceb77fe72</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|mecatronica y robotica|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8467, "row_hash": "fc101715c72b99b2e593aa5ec27f7b13e5b8c6c72e40ee002669e2fde89a00d7"}</td>
+    </tr>
+    <tr>
+      <td>acb1b4fa-1a91-44eb-b698-aea8f1bddf76</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|seguridad industrial|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8471, "row_hash": "cb82e63b5f3b3cc1aecb8ca97f0d8a103eb228318c12d5e7a725b9f869ef71e5"}</td>
+    </tr>
+    <tr>
+      <td>09c85c70-3b4b-4e8f-8dda-ef194de7c24f</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|seguridad industrial|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8472, "row_hash": "55b356371ef4b4686924e738485afbc9a53d10c3b19a7df8756fbff701d315ee"}</td>
+    </tr>
+    <tr>
+      <td>155cf7ad-70f9-4e27-a043-1d2b687b6535</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|diseno y simulacion|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8473, "row_hash": "8f15c9710e4380bbd90417c7b042d9c0fba844639484da1e704e64e3d21280d0"}</td>
+    </tr>
+    <tr>
+      <td>5e75379f-782a-42df-b482-eaebd524fe8c</td>
+      <td>8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb</td>
+      <td>duplicate_natural_key</td>
+      <td>escuela politecnica nacional|diseno y simulacion|ingenieria, industria y construccion|educacion superior de posgrado o cuarto nivel|presencial|pichincha|quito</td>
+      <td>{"row_index": 8474, "row_hash": "3042cc6221caf247f7258f3e50f084a55c39f078ffbfc0dba8891bab00b83788"}</td>
+    </tr>
+  </tbody>
+</table></body></html>

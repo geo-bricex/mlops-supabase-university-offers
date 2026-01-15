@@ -1,0 +1,108 @@
+_format_version: "1.1"
+_transform: true
+
+services:
+  - name: auth-v1
+    url: http://auth:9999/
+    routes:
+      - name: auth-v1
+        paths:
+          - /auth/v1/
+        strip_path: false
+    plugins:
+      - name: cors
+
+  - name: rest-v1
+    url: http://rest:3000/
+    routes:
+      - name: rest-v1
+        paths:
+          - /rest/v1/
+        strip_path: false
+    plugins:
+      - name: cors
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: acl
+        config:
+          allow:
+            - anon
+            - service_role
+
+  - name: storage-v1
+    url: http://storage:5000/
+    routes:
+      - name: storage-v1
+        paths:
+          - /storage/v1
+        strip_path: true
+    plugins:
+      - name: cors
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: acl
+        config:
+          allow:
+            - anon
+            - service_role
+
+  - name: storage-public
+    url: http://storage:5000/object/public/
+    routes:
+      - name: storage-public
+        paths:
+          - /storage/v1/object/public
+        strip_path: true
+    plugins:
+      - name: cors
+
+  - name: realtime-v1
+    url: http://realtime:4000/socket/
+    routes:
+      - name: realtime-v1
+        paths:
+          - /realtime/v1/
+        strip_path: true
+    plugins:
+      - name: cors
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: acl
+        config:
+          allow:
+            - anon
+            - service_role
+
+  - name: meta
+    url: http://meta:8080/
+    routes:
+      - name: meta
+        paths:
+          - /pg/
+        strip_path: true
+    plugins:
+      - name: cors
+      - name: key-auth
+        config:
+          hide_credentials: false
+      - name: acl
+        config:
+          allow:
+            - service_role
+
+consumers:
+  - username: anon
+    keyauth_credentials:
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MjM0OTIsImV4cCI6MjA4Mzc4MzQ5Mn0.IM8r8chxkqakxZckG2oI6JQJmHQjEmusrQqd0kcYqC8
+  - username: service_role
+    keyauth_credentials:
+      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODQyMzQ5MiwiZXhwIjoyMDgzNzgzNDkyfQ.S7LkEQUdhu9-yqxRv_OjUOuQWNylNRrUgpfGf6pCdco
+
+acls:
+  - consumer: anon
+    group: anon
+  - consumer: service_role
+    group: service_role

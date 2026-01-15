@@ -1,0 +1,19 @@
+{
+  "file_id": "5cf4202d-244b-4991-91c7-4dc7e7f75b78",
+  "file_path": "data/oferta-academica2025.xlsx",
+  "run_id": "8ed6c78a-1965-4871-9dbb-0e5d7b1e96cb",
+  "generated_at": "2026-01-14T16:37:04.812227Z",
+  "metrics": {
+    "rows_loaded": 20045,
+    "ingest_new": 17129,
+    "ingest_updated": 0,
+    "ingest_unchanged": 0,
+    "skipped_missing_dims": 1050,
+    "duplicates_in_file": 3706,
+    "invalid_territory": 1176,
+    "invalid_territory_pair": 0,
+    "conflicting_estado": 1801,
+    "missing_NOMBRE_IES": 1,
+    "missing_NOMBRE_CARRERA": 0
+  }
+}
