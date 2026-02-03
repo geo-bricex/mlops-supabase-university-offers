@@ -54,13 +54,22 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
 4. **View Dashboard**
    Navigate to [http://localhost:8501](http://localhost:8501).
 
-5. **Reports**
+5. **Local LLM (Ollama)**
+   Pull the model once (inside Docker):
+   ```bash
+   docker compose exec ollama ollama pull qwen3:14b
+   ```
+   The dashboard uses `OLLAMA_URL` and `OLLAMA_MODEL` to interpret charts with a button in the Overview tab.
+   Note: Qwen3 14B on CPU with 8GB RAM can be slow or fail to load. If that happens, choose a smaller
+   Qwen model tag available in Ollama and update `OLLAMA_MODEL`.
+
+6. **Reports**
    The ETL writes:
    - `reports/data_quality.json`
    - `reports/data_quality.html`
    - `reports/inconsistencies.csv`
 
-6. **Storage & Monitoring**
+7. **Storage & Monitoring**
    If `SUPABASE_SERVICE_ROLE_KEY` is set, the ETL uploads the source file and reports to Supabase Storage.
    Configure the bucket with `SUPABASE_STORAGE_BUCKET` and access it in Studio under Storage.
    Pipeline run metrics (duration, file size, change counts, storage status) are tracked in `raw_ingest.files`
@@ -76,7 +85,7 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
    ```
    Override endpoints using `SUPABASE_HEALTH_ENDPOINTS` (JSON map) if running outside Docker.
 
-7. **PostgREST + RPC Analytics**
+8. **PostgREST + RPC Analytics**
    Apply schema updates if needed:
    ```bash
    docker compose exec dashboard python -m src.db.init_db

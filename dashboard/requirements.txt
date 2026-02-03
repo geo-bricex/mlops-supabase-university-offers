@@ -8,6 +8,7 @@ python-dotenv
 pydeck
 openpyxl
 rapidfuzz
+requests
 # Add src dependencies if needed, but these cover most.
 pytest
 supabase

@@ -1,0 +1,4 @@
+.env
+
+# Docker volumes / local state
+docker/volumes/

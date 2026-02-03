@@ -257,6 +257,17 @@ services:
     networks:
       - supabase_network
 
+  ollama:
+    container_name: local-ollama
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ./docker/volumes/ollama:/root/.ollama
+    networks:
+      - supabase_network
+
   dashboard:
     container_name: dashboard-streamlit
     build:
@@ -277,6 +288,11 @@ services:
       - SUPABASE_STORAGE_PUBLIC=${SUPABASE_STORAGE_PUBLIC:-true}
       - DB_CONNECTION_STRING=postgresql://supabase_admin:${POSTGRES_PASSWORD}@db:5432/postgres
       - DB_AUTO_INIT=${DB_AUTO_INIT:-true}
+      - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3:14b}
+      - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-120}
+    depends_on:
+      - ollama
     volumes:
       - .:/app
     networks:

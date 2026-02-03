@@ -1,11 +1,13 @@
 import json
 import os
+import textwrap
 import unicodedata
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import requests
 import streamlit as st
 from sqlalchemy import create_engine
 
@@ -79,6 +81,88 @@ def parse_json_value(value):
         except json.JSONDecodeError:
             return {}
     return {}
+
+
+def get_ollama_settings():
+    return {
+        "url": os.getenv("OLLAMA_URL", "http://ollama:11434").rstrip("/"),
+        "model": os.getenv("OLLAMA_MODEL", "qwen3:14b"),
+        "timeout": float(os.getenv("OLLAMA_TIMEOUT", "120")),
+    }
+
+
+def format_top_counts(series, top_n=5):
+    counts = series.value_counts().head(top_n)
+    if counts.empty:
+        return "n/a"
+    return ", ".join([f"{idx}: {val}" for idx, val in counts.items()])
+
+
+def build_llm_context(filtered_df, date_range):
+    total = len(filtered_df)
+    unique_ies = filtered_df["ies"].nunique()
+    program_count = filtered_df[
+        ["carrera_norm", "campo_amplio", "nivel_formacion", "modalidad"]
+    ].drop_duplicates().shape[0]
+    provinces = filtered_df["provincia_norm"].nunique()
+    cantons = filtered_df["canton_norm"].nunique()
+
+    estado_summary = format_top_counts(filtered_df["estado_norm"], top_n=6)
+    modalidad_summary = format_top_counts(filtered_df["modalidad"], top_n=6)
+    top_ies = format_top_counts(filtered_df["ies"], top_n=10)
+    top_prov = format_top_counts(filtered_df["provincia_norm"], top_n=10)
+    top_canton = format_top_counts(filtered_df["canton_norm"], top_n=10)
+
+    if date_range and len(date_range) == 2:
+        date_text = f"{date_range[0]} to {date_range[1]}"
+    else:
+        date_text = "n/a"
+
+    return textwrap.dedent(
+        f"""
+        Dataset filtered summary
+        - Total active offers: {total}
+        - Unique IES: {unique_ies}
+        - Programs: {program_count}
+        - Provinces covered: {provinces}
+        - Cantons covered: {cantons}
+        - Ingestion date range: {date_text}
+        - Offer status distribution (top): {estado_summary}
+        - Modality distribution (top): {modalidad_summary}
+        - Top IES by offers: {top_ies}
+        - Top provinces by offers: {top_prov}
+        - Top cantons by offers: {top_canton}
+        """
+    ).strip()
+
+
+def build_llm_prompt(context, question=None):
+    base = textwrap.dedent(
+        """
+        Eres un analista de datos. Explica los resultados en espanol claro y simple
+        para una persona que se complica con graficos y tablas.
+        No inventes datos y solo usa la informacion provista.
+        Entrega primero 5-8 bullets con hallazgos claros y luego un parrafo corto
+        con posibles implicaciones o acciones.
+        """
+    ).strip()
+    if question:
+        base += f"\nPregunta del usuario: {question.strip()}"
+    return f"{base}\n\nDatos:\n{context}"
+
+
+def call_ollama(prompt):
+    settings = get_ollama_settings()
+    url = f"{settings['url']}/api/generate"
+    payload = {
+        "model": settings["model"],
+        "prompt": prompt,
+        "stream": False,
+    }
+    response = requests.post(url, json=payload, timeout=settings["timeout"])
+    response.raise_for_status()
+    data = response.json()
+    return (data.get("response") or "").strip()
 
 
 engine = get_engine()
@@ -224,6 +308,32 @@ with tab_overview:
         st.subheader("Top IES by Offer Volume")
         top_ies = filtered["ies"].value_counts().head(10).rename_axis("ies").reset_index(name="offers")
         st.dataframe(top_ies)
+
+        st.subheader("Interpretacion con LLM")
+        settings = get_ollama_settings()
+        st.caption(f"Modelo: {settings['model']} | Endpoint: {settings['url']}")
+        llm_question = st.text_input(
+            "Pregunta opcional para el LLM",
+            value="",
+            key="llm_question"
+        )
+        if st.button("Interpretar resultados", type="primary", key="llm_interpret"):
+            with st.spinner("Generando interpretacion..."):
+                try:
+                    context = build_llm_context(filtered, date_range)
+                    prompt = build_llm_prompt(context, llm_question)
+                    response = call_ollama(prompt)
+                    if response:
+                        st.session_state["llm_response"] = response
+                    else:
+                        st.session_state["llm_response"] = "No se recibio respuesta del modelo."
+                except requests.RequestException as exc:
+                    st.error(f"LLM error: {exc}")
+                except Exception as exc:
+                    st.error(f"LLM error inesperado: {exc}")
+
+        if st.session_state.get("llm_response"):
+            st.markdown(st.session_state["llm_response"])
     else:
         st.info("No data available for the selected filters.")
 
