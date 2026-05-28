@@ -18,11 +18,11 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
    ```bash
    docker compose up -d --build
    ```
+
    **Services**:
    - Studio: [http://localhost:54323](http://localhost:54323)
    - Dashboard: [http://localhost:8501](http://localhost:8501)
-   - Postgres: `localhost:54322`
-   - Ollama: `http://localhost:11434`
+   - Supabase API: [http://localhost:8000](http://localhost:8000)
    Note: inside Docker, services reach Supabase via `SUPABASE_URL_INTERNAL=http://kong:8000`.
 
 2. **ETL**
@@ -37,7 +37,7 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
 
 4. **Local LLM (Ollama)**
    The Ollama container pulls the configured model on first boot and the `ollama-warmup` container loads it once before the dashboard becomes available.
-   The dashboard uses `OLLAMA_INTERNAL_URL` for container-to-container traffic and shows `OLLAMA_PUBLIC_URL` as the browser-safe address.
+   The dashboard uses `OLLAMA_INTERNAL_URL` for container-to-container traffic.
    The safer default is `qwen2.5:1.5b` because it is more replicable on modest machines. If you need a different model, update `OLLAMA_MODEL` in `.env` before starting.
    To ingest another dataset, change `SOURCE_FILE` in `.env`.
 
@@ -84,9 +84,10 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
    ```
 
 ## Troubleshooting
+- `Ollama` and `Postgres` are internal-only services in Docker, so they should not fail because of host port collisions.
+- If Docker reports a port-bind error now, it is more likely coming from `Dashboard`, `Studio`, or `Kong`, which are the only host-facing services required for the default demo.
 - If Supabase services (auth, rest, realtime, storage) keep restarting due to password errors, recreate the stack from scratch with `docker compose down -v` and start again after confirming `.env`.
 - Artifact upload to Storage is optional. If `SUPABASE_SERVICE_ROLE_KEY` is missing or Storage is not fully provisioned yet, the ETL still completes and only skips uploads.
-- `http://ollama:11434` is only resolvable inside Docker. From your browser use `http://localhost:11434` or the value of `OLLAMA_PUBLIC_URL`.
 - If local LLM interpretation is still slow, keep `qwen2.5:1.5b` or reduce `OLLAMA_NUM_PREDICT` before moving to a larger model.
 - If you change `JWT_SECRET`, keep the anon/service tokens in `.env` and `docker/volumes/api/kong.yml` aligned.
 

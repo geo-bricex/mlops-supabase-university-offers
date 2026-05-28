@@ -30,9 +30,7 @@ The default workflow is:
    - `JWT_SECRET`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `OLLAMA_MODEL`
-   - `OLLAMA_PUBLIC_URL` only if your host port is not `11434`
    - `SOURCE_FILE`
-   - `DB_CONNECTION_STRING` only if you want to run Python outside Docker
 5. Keep `SUPABASE_URL_INTERNAL=http://kong:8000` for the container network.
 6. Put the source dataset at `data/oferta-academica2025.xlsx`, or change `SOURCE_FILE` in `.env` if you use another file.
 
@@ -42,13 +40,11 @@ The default workflow is:
 - `JWT_SECRET`: signs Supabase auth tokens. Keep it long and stable inside the same project.
 - `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`: local API keys used by Studio, ETL, and Storage.
 - `OLLAMA_INTERNAL_URL`: internal Docker endpoint used by the dashboard and other containers. Do not open this in the browser.
-- `OLLAMA_PUBLIC_URL`: host endpoint you can open from the browser, usually `http://localhost:11434`.
 - `OLLAMA_MODEL`: local model downloaded inside the Ollama container. The default `qwen2.5:1.5b` is chosen for easier replication on CPU-only machines.
 - `OLLAMA_TIMEOUT`: time limit for a dashboard interpretation request. Increase this only if you deliberately move to a larger local model.
 - `OLLAMA_NUM_PREDICT`: maximum generated tokens for the interpretation response. Keep this moderate to avoid very long local inference times.
 - `SOURCE_FILE`: path used by the ETL container. Change this when you want to ingest another Excel file without editing code.
 - `SUPABASE_STORAGE_BUCKET` and `SUPABASE_STORAGE_PUBLIC`: optional artifact publishing settings. Leave them as-is if you only want the pipeline to run and do not need Storage uploads yet.
-- `DB_CONNECTION_STRING`: only needed if you run Python on the host instead of inside Docker.
 
 ## Docker-First Start
 
@@ -127,14 +123,12 @@ The second run should be skipped by checksum if the source did not change.
 
 - Dashboard: `http://localhost:8501`
 - Supabase Studio: `http://localhost:54323`
-- Postgres: `localhost:54322`
 - Kong API: `http://localhost:8000`
-- Ollama in browser: `http://localhost:11434`
 
 Important:
 
 - `http://ollama:11434` is the internal Docker hostname and only containers can resolve it.
-- `http://localhost:11434` is the host endpoint you can open from your browser.
+- The local AI service is intentionally internal-only. You use it through the dashboard, not by opening Ollama directly in the browser.
 
 ## How To Use The Dashboard
 
@@ -157,6 +151,8 @@ Important:
 - If the dashboard says the database is missing, run `src.db.init_db` again.
 - If Ollama is too slow, keep `qwen2.5:1.5b` or move to an even lighter model before trying a larger one.
 - If the dashboard shows a timeout, check that the warmup container completed successfully with `docker compose ps`.
+- `Ollama` and `Postgres` are internal-only in Docker, so they should not fail because of host port collisions in the default setup.
+- If Docker shows a port-bind error now, focus on `Dashboard`, `Studio`, or `Kong`, which are the only services intentionally exposed to the host in the default setup.
 - If storage uploads fail, check `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_STORAGE_BUCKET`.
 - If a service keeps restarting, check the container logs:
 

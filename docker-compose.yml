@@ -220,8 +220,6 @@ services:
       - config_file=/etc/postgresql/postgresql.conf
       - -c
       - log_min_messages=fatal
-    ports:
-      - "${POSTGRES_PORT}:5432"
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
@@ -261,8 +259,6 @@ services:
     container_name: local-ollama
     image: ollama/ollama:latest
     restart: unless-stopped
-    ports:
-      - "${OLLAMA_PORT:-11434}:11434"
     volumes:
       - ./docker/volumes/ollama:/root/.ollama
     environment:
@@ -335,7 +331,6 @@ services:
       - DB_CONNECTION_STRING=postgresql://supabase_admin:${POSTGRES_PASSWORD}@db:5432/postgres
       - DB_AUTO_INIT=${DB_AUTO_INIT:-true}
       - OLLAMA_INTERNAL_URL=${OLLAMA_INTERNAL_URL:-http://ollama:11434}
-      - OLLAMA_PUBLIC_URL=${OLLAMA_PUBLIC_URL:-http://localhost:11434}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:1.5b}
       - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-180}
       - OLLAMA_NUM_PREDICT=${OLLAMA_NUM_PREDICT:-220}
@@ -373,7 +368,6 @@ services:
       - DB_CONNECTION_STRING=postgresql://supabase_admin:${POSTGRES_PASSWORD}@db:5432/postgres
       - DB_AUTO_INIT=${DB_AUTO_INIT:-true}
       - OLLAMA_INTERNAL_URL=${OLLAMA_INTERNAL_URL:-http://ollama:11434}
-      - OLLAMA_PUBLIC_URL=${OLLAMA_PUBLIC_URL:-http://localhost:11434}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:1.5b}
       - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-180}
       - OLLAMA_NUM_PREDICT=${OLLAMA_NUM_PREDICT:-220}

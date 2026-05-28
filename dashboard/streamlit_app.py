@@ -106,13 +106,8 @@ def get_ollama_settings():
         "OLLAMA_INTERNAL_URL",
         os.getenv("OLLAMA_URL", "http://ollama:11434"),
     ).rstrip("/")
-    public_url = os.getenv(
-        "OLLAMA_PUBLIC_URL",
-        f"http://localhost:{os.getenv('OLLAMA_PORT', '11434')}",
-    ).rstrip("/")
     return {
         "internal_url": internal_url,
-        "public_url": public_url,
         "model": os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b"),
         "timeout": float(os.getenv("OLLAMA_TIMEOUT", "180")),
         "num_predict": int(os.getenv("OLLAMA_NUM_PREDICT", "220")),
@@ -224,16 +219,16 @@ def call_ollama(prompt):
 def explain_ollama_error(exc: Exception, settings: dict, status: dict) -> str:
     if isinstance(exc, requests.Timeout):
         return (
-            "El modelo local tardó demasiado en responder. "
-            f"Tiempo límite: {settings['timeout']:.0f}s. "
-            "Prueba un modelo más liviano como `qwen2.5:1.5b`, espera a que termine el precalentamiento, "
+            "El modelo local tardo demasiado en responder. "
+            f"Tiempo limite: {settings['timeout']:.0f}s. "
+            "Prueba un modelo mas liviano como `qwen2.5:1.5b`, espera a que termine el precalentamiento, "
             "o aumenta `OLLAMA_TIMEOUT` si tu equipo usa CPU."
         )
     if not status.get("reachable"):
         return (
             "El dashboard no puede llegar a Ollama dentro de Docker. "
             f"Endpoint interno esperado: `{settings['internal_url']}`. "
-            "Ese nombre solo existe dentro de la red Docker; en tu navegador debes usar el endpoint público."
+            "Ese nombre solo existe dentro de la red Docker."
         )
     return f"LLM error: {exc}"
 
@@ -386,23 +381,19 @@ with tab_overview:
         settings = get_ollama_settings()
         ollama_status = get_ollama_status(settings["internal_url"], settings["model"])
         st.caption(f"Modelo local: {settings['model']}")
-        st.markdown(
-            f"Endpoint para navegador: [{settings['public_url']}]({settings['public_url']})"
-        )
         st.caption(
-            f"Backend interno del dashboard: {settings['internal_url']} "
-            "(solo funciona dentro de Docker)"
+            "La IA local corre dentro de Docker y el dashboard se conecta internamente a Ollama."
         )
         if ollama_status["ready"]:
-            st.success("Ollama está listo y el modelo ya fue cargado en el contenedor.")
+            st.success("Ollama esta listo y el modelo ya fue cargado en el contenedor.")
         elif ollama_status["reachable"]:
             st.warning(
-                "Ollama responde, pero el modelo todavía no aparece listo. "
-                "Espera un poco más a que termine la descarga o el precalentamiento."
+                "Ollama responde, pero el modelo todavia no aparece listo. "
+                "Espera un poco mas a que termine la descarga o el precalentamiento."
             )
         else:
             st.warning(
-                "Ollama no está disponible todavía desde el dashboard. "
+                "Ollama no esta disponible todavia desde el dashboard. "
                 "Revisa `docker compose logs -f ollama`."
             )
         llm_question = st.text_input(
@@ -415,7 +406,7 @@ with tab_overview:
                 try:
                     if not ollama_status["ready"]:
                         raise RuntimeError(
-                            "El modelo no está listo aún. Espera a que termine la preparación de Ollama."
+                            "El modelo no esta listo aun. Espera a que termine la preparacion de Ollama."
                         )
                     context = build_llm_context(filtered, date_range)
                     prompt = build_llm_prompt(context, llm_question)
