@@ -14,62 +14,40 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
 
 ## Setup & Running
 
-1. **Start the Supabase Stack**
+1. **Start the full stack**
    ```bash
-   docker compose up -d
+   docker compose up -d --build
    ```
    **Services**:
    - Studio: [http://localhost:54323](http://localhost:54323)
    - Dashboard: [http://localhost:8501](http://localhost:8501)
    - Postgres: `localhost:54322`
+   - Ollama: `http://localhost:11434`
    Note: inside Docker, services reach Supabase via `SUPABASE_URL_INTERNAL=http://kong:8000`.
 
-2. **Initialize Database**
-   Install python dependencies first:
+2. **ETL**
+   The `etl` container boots with the stack, initializes the schema, and ingests the file defined in `SOURCE_FILE`.
+   If you replace the source file and need to rerun the load, use:
    ```bash
-   pip install -r requirements.txt
-   ```
-   Apply the schema:
-   ```bash
-   python -m src.db.init_db
-   ```
-   Or use the Studio SQL Editor to run `sql/init.sql`.
-   The dashboard/ETL will also auto-init when `DB_AUTO_INIT=true`.
-   If you don't have local Python, run inside Docker:
-   ```bash
-   docker compose exec dashboard python -m src.db.init_db
+   docker compose run --rm etl
    ```
 
-3. **Ingest Data**
-   Place your source file in `data/oferta-academica2025.xlsx`.
-   Run the ingestion pipeline:
-   ```bash
-   python -m src.etl.ingest --path data/oferta-academica2025.xlsx
-   ```
-   Or run inside Docker:
-   ```bash
-   docker compose exec dashboard python -m src.etl.ingest --path data/oferta-academica2025.xlsx
-   ```
-
-4. **View Dashboard**
+3. **View Dashboard**
    Navigate to [http://localhost:8501](http://localhost:8501).
 
-5. **Local LLM (Ollama)**
-   Pull the model once (inside Docker):
-   ```bash
-   docker compose exec ollama ollama pull qwen3:14b
-   ```
-   The dashboard uses `OLLAMA_URL` and `OLLAMA_MODEL` to interpret charts with a button in the Overview tab.
-   Note: Qwen3 14B on CPU with 8GB RAM can be slow or fail to load. If that happens, choose a smaller
-   Qwen model tag available in Ollama and update `OLLAMA_MODEL`.
+4. **Local LLM (Ollama)**
+   The Ollama container pulls the configured model on first boot and the `ollama-warmup` container loads it once before the dashboard becomes available.
+   The dashboard uses `OLLAMA_INTERNAL_URL` for container-to-container traffic and shows `OLLAMA_PUBLIC_URL` as the browser-safe address.
+   The safer default is `qwen2.5:1.5b` because it is more replicable on modest machines. If you need a different model, update `OLLAMA_MODEL` in `.env` before starting.
+   To ingest another dataset, change `SOURCE_FILE` in `.env`.
 
-6. **Reports**
+5. **Reports**
    The ETL writes:
    - `reports/data_quality.json`
    - `reports/data_quality.html`
    - `reports/inconsistencies.csv`
 
-7. **Storage & Monitoring**
+6. **Storage & Monitoring**
    If `SUPABASE_SERVICE_ROLE_KEY` is set, the ETL uploads the source file and reports to Supabase Storage.
    Configure the bucket with `SUPABASE_STORAGE_BUCKET` and access it in Studio under Storage.
    Pipeline run metrics (duration, file size, change counts, storage status) are tracked in `raw_ingest.files`
@@ -85,7 +63,7 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
    ```
    Override endpoints using `SUPABASE_HEALTH_ENDPOINTS` (JSON map) if running outside Docker.
 
-8. **PostgREST + RPC Analytics**
+7. **PostgREST + RPC Analytics**
    Apply schema updates if needed:
    ```bash
    docker compose exec dashboard python -m src.db.init_db
@@ -106,17 +84,11 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
    ```
 
 ## Troubleshooting
-- If Supabase services (storage/rest/auth) keep restarting due to password errors, run:
-  ```bash
-  docker compose exec db psql -U supabase_admin -d postgres -v password=$POSTGRES_PASSWORD -f sql/supabase_roles.sql
-  docker compose restart
-  ```
-- If Storage returns RLS or "relation buckets does not exist" errors, re-run:
-  ```bash
-  docker compose exec db psql -U supabase_admin -d postgres -v password=$POSTGRES_PASSWORD -f sql/supabase_roles.sql
-  docker compose restart storage
-  ```
-- If you change `JWT_SECRET`, regenerate the anon/service tokens in `.env` and update `docker/volumes/api/kong.yml` to match.
+- If Supabase services (auth, rest, realtime, storage) keep restarting due to password errors, recreate the stack from scratch with `docker compose down -v` and start again after confirming `.env`.
+- Artifact upload to Storage is optional. If `SUPABASE_SERVICE_ROLE_KEY` is missing or Storage is not fully provisioned yet, the ETL still completes and only skips uploads.
+- `http://ollama:11434` is only resolvable inside Docker. From your browser use `http://localhost:11434` or the value of `OLLAMA_PUBLIC_URL`.
+- If local LLM interpretation is still slow, keep `qwen2.5:1.5b` or reduce `OLLAMA_NUM_PREDICT` before moving to a larger model.
+- If you change `JWT_SECRET`, keep the anon/service tokens in `.env` and `docker/volumes/api/kong.yml` aligned.
 
 ## Project Structure
 - `data/`: Source Excel files.

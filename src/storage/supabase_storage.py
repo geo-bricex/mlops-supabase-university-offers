@@ -39,7 +39,11 @@ def get_supabase_client():
 def ensure_bucket(client, bucket: str, public: bool) -> bool:
     if client is None:
         return False
-    resp = client.storage.list_buckets()
+    try:
+        resp = client.storage.list_buckets()
+    except Exception as exc:
+        logger.debug(f"Storage bucket check skipped: {exc}")
+        return False
     buckets = _response_data(resp)
     for item in buckets:
         if isinstance(item, dict):
@@ -81,7 +85,8 @@ def upload_artifacts(file_id: str, source_path: str, report_dir: Path) -> Dict[s
     public = _bool_env(os.getenv("SUPABASE_STORAGE_PUBLIC", "false"))
 
     try:
-        ensure_bucket(client, bucket, public)
+        if not ensure_bucket(client, bucket, public):
+            return {"status": "skipped", "paths": {}}
     except Exception as exc:
         logger.error(f"Failed to ensure bucket: {exc}")
         return {"status": "failed", "paths": {}}

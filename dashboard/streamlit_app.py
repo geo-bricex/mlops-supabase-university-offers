@@ -83,12 +83,63 @@ def parse_json_value(value):
     return {}
 
 
+def prepare_dataframe_for_display(df: pd.DataFrame) -> pd.DataFrame:
+    display_df = df.copy()
+    for column in display_df.columns:
+        if pd.api.types.is_object_dtype(display_df[column]) or pd.api.types.is_string_dtype(display_df[column]):
+            display_df[column] = display_df[column].apply(
+                lambda value: json.dumps(value, ensure_ascii=False)
+                if isinstance(value, (dict, list))
+                else str(value)
+                if value is not None and not pd.isna(value)
+                else value
+            )
+    return display_df
+
+
+def show_dataframe(df: pd.DataFrame, **kwargs):
+    st.dataframe(prepare_dataframe_for_display(df), **kwargs)
+
+
 def get_ollama_settings():
+    internal_url = os.getenv(
+        "OLLAMA_INTERNAL_URL",
+        os.getenv("OLLAMA_URL", "http://ollama:11434"),
+    ).rstrip("/")
+    public_url = os.getenv(
+        "OLLAMA_PUBLIC_URL",
+        f"http://localhost:{os.getenv('OLLAMA_PORT', '11434')}",
+    ).rstrip("/")
     return {
-        "url": os.getenv("OLLAMA_URL", "http://ollama:11434").rstrip("/"),
-        "model": os.getenv("OLLAMA_MODEL", "qwen3:14b"),
-        "timeout": float(os.getenv("OLLAMA_TIMEOUT", "120")),
+        "internal_url": internal_url,
+        "public_url": public_url,
+        "model": os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b"),
+        "timeout": float(os.getenv("OLLAMA_TIMEOUT", "180")),
+        "num_predict": int(os.getenv("OLLAMA_NUM_PREDICT", "220")),
+        "keep_alive": os.getenv("OLLAMA_KEEP_ALIVE", "30m"),
     }
+
+
+@st.cache_data(ttl=15, show_spinner=False)
+def get_ollama_status(internal_url: str, model: str):
+    try:
+        response = requests.get(f"{internal_url}/api/tags", timeout=5)
+        response.raise_for_status()
+        payload = response.json()
+        models = [item.get("name", "") for item in payload.get("models", [])]
+        return {
+            "reachable": True,
+            "ready": model in models,
+            "available_models": models,
+            "error": None,
+        }
+    except requests.RequestException as exc:
+        return {
+            "reachable": False,
+            "ready": False,
+            "available_models": [],
+            "error": str(exc),
+        }
 
 
 def format_top_counts(series, top_n=5):
@@ -153,16 +204,38 @@ def build_llm_prompt(context, question=None):
 
 def call_ollama(prompt):
     settings = get_ollama_settings()
-    url = f"{settings['url']}/api/generate"
+    url = f"{settings['internal_url']}/api/generate"
     payload = {
         "model": settings["model"],
         "prompt": prompt,
         "stream": False,
+        "keep_alive": settings["keep_alive"],
+        "options": {
+            "temperature": 0.2,
+            "num_predict": settings["num_predict"],
+        },
     }
     response = requests.post(url, json=payload, timeout=settings["timeout"])
     response.raise_for_status()
     data = response.json()
     return (data.get("response") or "").strip()
+
+
+def explain_ollama_error(exc: Exception, settings: dict, status: dict) -> str:
+    if isinstance(exc, requests.Timeout):
+        return (
+            "El modelo local tardó demasiado en responder. "
+            f"Tiempo límite: {settings['timeout']:.0f}s. "
+            "Prueba un modelo más liviano como `qwen2.5:1.5b`, espera a que termine el precalentamiento, "
+            "o aumenta `OLLAMA_TIMEOUT` si tu equipo usa CPU."
+        )
+    if not status.get("reachable"):
+        return (
+            "El dashboard no puede llegar a Ollama dentro de Docker. "
+            f"Endpoint interno esperado: `{settings['internal_url']}`. "
+            "Ese nombre solo existe dentro de la red Docker; en tu navegador debes usar el endpoint público."
+        )
+    return f"LLM error: {exc}"
 
 
 engine = get_engine()
@@ -307,11 +380,31 @@ with tab_overview:
 
         st.subheader("Top IES by Offer Volume")
         top_ies = filtered["ies"].value_counts().head(10).rename_axis("ies").reset_index(name="offers")
-        st.dataframe(top_ies)
+        show_dataframe(top_ies)
 
         st.subheader("Interpretacion con LLM")
         settings = get_ollama_settings()
-        st.caption(f"Modelo: {settings['model']} | Endpoint: {settings['url']}")
+        ollama_status = get_ollama_status(settings["internal_url"], settings["model"])
+        st.caption(f"Modelo local: {settings['model']}")
+        st.markdown(
+            f"Endpoint para navegador: [{settings['public_url']}]({settings['public_url']})"
+        )
+        st.caption(
+            f"Backend interno del dashboard: {settings['internal_url']} "
+            "(solo funciona dentro de Docker)"
+        )
+        if ollama_status["ready"]:
+            st.success("Ollama está listo y el modelo ya fue cargado en el contenedor.")
+        elif ollama_status["reachable"]:
+            st.warning(
+                "Ollama responde, pero el modelo todavía no aparece listo. "
+                "Espera un poco más a que termine la descarga o el precalentamiento."
+            )
+        else:
+            st.warning(
+                "Ollama no está disponible todavía desde el dashboard. "
+                "Revisa `docker compose logs -f ollama`."
+            )
         llm_question = st.text_input(
             "Pregunta opcional para el LLM",
             value="",
@@ -320,6 +413,10 @@ with tab_overview:
         if st.button("Interpretar resultados", type="primary", key="llm_interpret"):
             with st.spinner("Generando interpretacion..."):
                 try:
+                    if not ollama_status["ready"]:
+                        raise RuntimeError(
+                            "El modelo no está listo aún. Espera a que termine la preparación de Ollama."
+                        )
                     context = build_llm_context(filtered, date_range)
                     prompt = build_llm_prompt(context, llm_question)
                     response = call_ollama(prompt)
@@ -328,7 +425,9 @@ with tab_overview:
                     else:
                         st.session_state["llm_response"] = "No se recibio respuesta del modelo."
                 except requests.RequestException as exc:
-                    st.error(f"LLM error: {exc}")
+                    st.error(explain_ollama_error(exc, settings, ollama_status))
+                except RuntimeError as exc:
+                    st.error(str(exc))
                 except Exception as exc:
                     st.error(f"LLM error inesperado: {exc}")
 
@@ -393,11 +492,11 @@ with tab_geo:
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("Top Provinces by Offer Volume")
-            st.dataframe(prov_counts.sort_values("offers", ascending=False).head(10))
+            show_dataframe(prov_counts.sort_values("offers", ascending=False).head(10))
         with col2:
             st.subheader("Top Cantons by Offer Volume")
             canton_top = filtered.groupby("canton_norm").size().reset_index(name="offers").sort_values("offers", ascending=False)
-            st.dataframe(canton_top.head(10))
+            show_dataframe(canton_top.head(10))
 
 with tab_diversity:
     st.header("Diversity & Concentration")
@@ -417,27 +516,27 @@ with tab_diversity:
         prov_diversity = prov_hhi.merge(prov_entropy, on="provincia_norm", how="left")
 
         st.subheader("Most Specialized Provinces (High HHI)")
-        st.dataframe(prov_diversity.sort_values("hhi", ascending=False).head(10))
+        show_dataframe(prov_diversity.sort_values("hhi", ascending=False).head(10))
 
         st.subheader("Most Diversified Provinces (Low HHI)")
-        st.dataframe(prov_diversity.sort_values("hhi", ascending=True).head(10))
+        show_dataframe(prov_diversity.sort_values("hhi", ascending=True).head(10))
 
         canton_hhi = filtered.groupby("canton_norm")["campo_amplio"].apply(hhi).reset_index(name="hhi")
         canton_entropy = filtered.groupby("canton_norm")["campo_amplio"].apply(entropy).reset_index(name="entropy")
         canton_diversity = canton_hhi.merge(canton_entropy, on="canton_norm", how="left")
 
         st.subheader("Most Specialized Cantons (High HHI)")
-        st.dataframe(canton_diversity.sort_values("hhi", ascending=False).head(10))
+        show_dataframe(canton_diversity.sort_values("hhi", ascending=False).head(10))
 
         st.subheader("Most Diversified Cantons (Low HHI)")
-        st.dataframe(canton_diversity.sort_values("hhi", ascending=True).head(10))
+        show_dataframe(canton_diversity.sort_values("hhi", ascending=True).head(10))
 
         st.subheader("Institution Profiling")
         ies_counts = filtered.groupby("ies").size().reset_index(name="offers").sort_values("offers", ascending=False)
         ies_fields = filtered.groupby("ies")["campo_amplio"].nunique().reset_index(name="unique_fields")
         ies_levels = filtered.groupby("ies")["nivel_formacion"].nunique().reset_index(name="unique_levels")
         ies_profile = ies_counts.merge(ies_fields, on="ies", how="left").merge(ies_levels, on="ies", how="left")
-        st.dataframe(ies_profile.head(15))
+        show_dataframe(ies_profile.head(15))
 
 with tab_quality:
     st.header("Data Quality")
@@ -481,7 +580,7 @@ with tab_quality:
         issue_types = sorted(issues["issue_type"].dropna().unique())
         selected_issues = st.multiselect("Issue Types", issue_types, default=issue_types)
         filtered_issues = issues[issues["issue_type"].isin(selected_issues)]
-        st.dataframe(filtered_issues)
+        show_dataframe(filtered_issues)
 
         csv_bytes = filtered_issues.to_csv(index=False).encode("utf-8")
         st.download_button(
@@ -516,7 +615,7 @@ with tab_timeline:
         ORDER BY ingested_at DESC
     """)
     st.subheader("Ingestion Runs")
-    st.dataframe(files)
+    show_dataframe(files)
 
     if not files.empty:
         files["storage_paths_parsed"] = files["storage_paths"].apply(parse_json_value)
@@ -698,7 +797,7 @@ with tab_monitoring:
 
         if not latest_steps.empty:
             st.markdown("Latest run step timings:")
-            st.dataframe(latest_steps[["step_name", "duration_seconds", "row_count", "started_at", "detail"]])
+            show_dataframe(latest_steps[["step_name", "duration_seconds", "row_count", "started_at", "detail"]])
             fig_steps = px.bar(
                 latest_steps,
                 x="step_name",
@@ -727,7 +826,7 @@ with tab_monitoring:
     else:
         health["created_at"] = pd.to_datetime(health["created_at"], errors="coerce")
         latest = health.sort_values("created_at", ascending=False).groupby("service_name").head(1)
-        st.dataframe(latest[["service_name", "status", "status_code", "latency_ms", "created_at", "endpoint"]])
+        show_dataframe(latest[["service_name", "status", "status_code", "latency_ms", "created_at", "endpoint"]])
 
         counts = health.groupby(["service_name", "status"]).size().reset_index(name="count")
         fig_health = px.bar(counts, x="service_name", y="count", color="status", title="Service Health Checks")
@@ -763,6 +862,6 @@ with tab_monitoring:
                     })
         if artifact_rows:
             artifact_df = pd.DataFrame(artifact_rows)
-            st.dataframe(artifact_df, use_container_width=True)
+            show_dataframe(artifact_df, use_container_width=True)
         else:
             st.info("Storage uploads are not available yet. Check SUPABASE_SERVICE_ROLE_KEY and rerun ETL.")

@@ -109,7 +109,7 @@ services:
     image: supabase/realtime:v2.68.0
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "curl -sS http://127.0.0.1:4000/ >/dev/null" ]
+      test: [ "CMD-SHELL", "curl -fsS http://127.0.0.1:4000/ >/dev/null" ]
       timeout: 5s
       interval: 5s
       retries: 3
@@ -127,7 +127,7 @@ services:
       API_JWT_SECRET: ${JWT_SECRET}
       FLY_ALLOC_ID: fly_alloc_id
       FLY_APP_NAME: realtime
-      SECRET_KEY_BASE: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
       ERL_AFLAGS: "-proto_dist inet_tcp"
       ENABLE_TAILSCALE: "false"
       DNS_NODES: "''"
@@ -225,7 +225,7 @@ services:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ./docker/volumes/db/data:/var/lib/postgresql/data
+      - supabase_db_data:/var/lib/postgresql/data
       - ./docker/init:/docker-entrypoint-initdb.d
     networks:
       - supabase_network
@@ -265,6 +265,52 @@ services:
       - "${OLLAMA_PORT:-11434}:11434"
     volumes:
       - ./docker/volumes/ollama:/root/.ollama
+    environment:
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:1.5b}
+    entrypoint:
+      - /bin/sh
+    command:
+      - -lc
+      - |
+        set -e
+        ollama serve >/tmp/ollama.log 2>&1 &
+        pid=$$!
+        until ollama list >/dev/null 2>&1; do
+          sleep 1
+        done
+        if ! ollama list | grep -Fq "$$OLLAMA_MODEL"; then
+          ollama pull "$$OLLAMA_MODEL"
+        fi
+        wait $$pid
+    healthcheck:
+      test: [ "CMD-SHELL", "ollama list | grep -Fq \"$$OLLAMA_MODEL\"" ]
+      timeout: 10s
+      interval: 10s
+      retries: 30
+      start_period: 20s
+    networks:
+      - supabase_network
+
+  ollama-warmup:
+    container_name: ollama-warmup
+    image: ollama/ollama:latest
+    restart: "no"
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:1.5b}
+    entrypoint:
+      - /bin/sh
+    command:
+      - -lc
+      - |
+        set -e
+        until ollama list >/dev/null 2>&1; do
+          sleep 1
+        done
+        ollama run "$$OLLAMA_MODEL" "Reply with OK only." >/tmp/ollama-warmup.txt
+    depends_on:
+      ollama:
+        condition: service_healthy
     networks:
       - supabase_network
 
@@ -288,11 +334,56 @@ services:
       - SUPABASE_STORAGE_PUBLIC=${SUPABASE_STORAGE_PUBLIC:-true}
       - DB_CONNECTION_STRING=postgresql://supabase_admin:${POSTGRES_PASSWORD}@db:5432/postgres
       - DB_AUTO_INIT=${DB_AUTO_INIT:-true}
-      - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen3:14b}
-      - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-120}
+      - OLLAMA_INTERNAL_URL=${OLLAMA_INTERNAL_URL:-http://ollama:11434}
+      - OLLAMA_PUBLIC_URL=${OLLAMA_PUBLIC_URL:-http://localhost:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:1.5b}
+      - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-180}
+      - OLLAMA_NUM_PREDICT=${OLLAMA_NUM_PREDICT:-220}
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-30m}
     depends_on:
-      - ollama
+      db:
+        condition: service_healthy
+      etl:
+        condition: service_completed_successfully
+      ollama:
+        condition: service_healthy
+      ollama-warmup:
+        condition: service_completed_successfully
+    volumes:
+      - .:/app
+    networks:
+      - supabase_network
+
+  etl:
+    container_name: etl-runner
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+      args:
+        - SUPABASE_URL=${SUPABASE_URL}
+        - SUPABASE_KEY=${SUPABASE_ANON_KEY}
+    restart: "no"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL_INTERNAL:-http://kong:8000}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL}
+      - SUPABASE_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_STORAGE_BUCKET=${SUPABASE_STORAGE_BUCKET:-etl-artifacts}
+      - SUPABASE_STORAGE_PUBLIC=${SUPABASE_STORAGE_PUBLIC:-true}
+      - DB_CONNECTION_STRING=postgresql://supabase_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      - DB_AUTO_INIT=${DB_AUTO_INIT:-true}
+      - OLLAMA_INTERNAL_URL=${OLLAMA_INTERNAL_URL:-http://ollama:11434}
+      - OLLAMA_PUBLIC_URL=${OLLAMA_PUBLIC_URL:-http://localhost:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:1.5b}
+      - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-180}
+      - OLLAMA_NUM_PREDICT=${OLLAMA_NUM_PREDICT:-220}
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-30m}
+    command: ["python", "-m", "src.etl.ingest", "--path", "${SOURCE_FILE:-data/oferta-academica2025.xlsx}"]
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
     volumes:
       - .:/app
     networks:
@@ -301,3 +392,6 @@ services:
 networks:
   supabase_network:
     driver: bridge
+
+volumes:
+  supabase_db_data:

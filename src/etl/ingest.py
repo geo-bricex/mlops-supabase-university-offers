@@ -8,7 +8,7 @@ import sys
 import time
 import unicodedata
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -130,13 +130,13 @@ def generate_row_hash(row):
 def start_step(step_name: str) -> dict:
     return {
         "step_name": step_name,
-        "started_at": datetime.utcnow(),
+        "started_at": datetime.now(timezone.utc),
         "_perf": time.perf_counter()
     }
 
 
 def finish_step(step: dict, row_count: Optional[int] = None, detail: Optional[dict] = None) -> dict:
-    step["finished_at"] = datetime.utcnow()
+    step["finished_at"] = datetime.now(timezone.utc)
     step["duration_seconds"] = round(time.perf_counter() - step.pop("_perf"), 6)
     if row_count is not None:
         step["row_count"] = int(row_count)
@@ -214,7 +214,7 @@ def should_skip_by_checksum(checksum: str):
         if not res:
             return False, None
         if res.status == 'success':
-            note = f"Duplicate checksum skipped at {datetime.utcnow().isoformat()}Z"
+            note = f"Duplicate checksum skipped at {datetime.now(timezone.utc).isoformat()}"
             session.execute(
                 text("UPDATE raw_ingest.files SET notes = :note WHERE file_id = :fid"),
                 {"note": note, "fid": res.file_id}
@@ -245,7 +245,7 @@ def write_reports(dq: DataQualityChecker, output_dir: Path, file_id: str, file_p
         "file_id": file_id,
         "file_path": file_path,
         "run_id": dq.run_id,
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "metrics": dq.metrics
     }
 
@@ -279,7 +279,7 @@ def write_reports(dq: DataQualityChecker, output_dir: Path, file_id: str, file_p
 
 def run_pipeline(file_path):
     logger.info(f"Starting pipeline for {file_path}")
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
     file_size_bytes = os.path.getsize(file_path) if os.path.exists(file_path) else None
     step_metrics = []
     file_id = None
@@ -369,7 +369,7 @@ def run_pipeline(file_path):
         # 7. Loading Staging (Bulk)
         # We need to serialize JSONB fields
         df['file_id'] = file_id
-        df['ingested_at'] = datetime.now()
+        df['ingested_at'] = datetime.now(timezone.utc)
 
         # Prepare staging dataframe
         stg_df = df.copy()
@@ -598,7 +598,7 @@ def run_pipeline(file_path):
             extra={"rows_after_drop": rows_after_drop}
         )
         write_step_metrics(file_id, step_metrics)
-        finished_at = datetime.utcnow()
+        finished_at = datetime.now(timezone.utc)
         duration_seconds = (finished_at - start_time).total_seconds()
         with get_db_session() as session:
             session.execute(
@@ -638,7 +638,7 @@ def run_pipeline(file_path):
                 extra={"rows_after_drop": rows_after_drop, "error": str(e)}
             )
             write_step_metrics(file_id, step_metrics)
-            finished_at = datetime.utcnow()
+            finished_at = datetime.now(timezone.utc)
             duration_seconds = (finished_at - start_time).total_seconds()
             with get_db_session() as session:
                 session.execute(
