@@ -6,8 +6,9 @@ The default workflow is:
 1. Start the stack with Docker Compose.
 2. Let the Ollama container pull the model on first boot.
 3. Let the ETL container initialize the schema and load the Excel source.
-4. Review data quality, monitoring, and the dashboard.
-5. Use the local Ollama model for interpretation.
+4. Let the MLOps trainer container fit, evaluate, register, and score the quality-risk model.
+5. Review data quality, monitoring, MLOps, and the dashboard.
+6. Use the local Ollama model for interpretation.
 
 ## What this project does
 
@@ -15,8 +16,11 @@ The default workflow is:
 - The Ollama container downloads the configured model on first startup.
 - A dedicated warmup container loads the model once before the dashboard is exposed, so the first interpretation request does not start from a cold model.
 - The ETL container runs the research pipeline inside Docker and exits when the load finishes.
+- A dedicated `storage-migrate` container applies the official Supabase Storage tenant migrations before ETL and model training start.
+- The `ml-trainer` container converts audited ingest data into a supervised ML task, trains a quality-risk model, evaluates it, stores the artifact, and writes predictions and monitoring records.
 - `src.db.init_db` creates or updates schemas, tables, views, RPC functions, and policies.
 - `src.etl.ingest` reads the Excel file, normalizes fields, matches geography, computes keys, loads dimensions and facts, runs data quality checks, writes reports, and uploads artifacts when storage credentials are available.
+- `src.ml.train` trains and versions the row-level quality-risk classifier and records MLOps metadata in the database.
 - `src.ops.monitor` records service health checks for the MLOps layer.
 - `dashboard/streamlit_app.py` is the research interface for geospatial analysis, data quality, timelines, monitoring, and local LLM interpretation.
 
@@ -43,8 +47,15 @@ The default workflow is:
 - `OLLAMA_MODEL`: local model downloaded inside the Ollama container. The default `qwen2.5:1.5b` is chosen for easier replication on CPU-only machines.
 - `OLLAMA_TIMEOUT`: time limit for a dashboard interpretation request. Increase this only if you deliberately move to a larger local model.
 - `OLLAMA_NUM_PREDICT`: maximum generated tokens for the interpretation response. Keep this moderate to avoid very long local inference times.
+- `ML_MODEL_NAME`: logical name stored in the MLOps registry.
+- `ML_RISK_THRESHOLD`: probability threshold used to classify a row as quality-risk positive.
+- `ML_ARTIFACT_DIR`: local path where versioned model artifacts are stored.
+- `ML_PRIMARY_SELECTION_METRIC`: the metric used to choose the winning candidate model during automatic selection.
 - `SOURCE_FILE`: path used by the ETL container. Change this when you want to ingest another Excel file without editing code.
-- `SUPABASE_STORAGE_BUCKET` and `SUPABASE_STORAGE_PUBLIC`: optional artifact publishing settings. Leave them as-is if you only want the pipeline to run and do not need Storage uploads yet.
+- `SUPABASE_STORAGE_BUCKET` and `SUPABASE_STORAGE_PUBLIC`: artifact publishing settings for source files, reports, and trained models.
+- `SUPABASE_STORAGE_URL_INTERNAL`: direct container-to-container Storage endpoint used by the upload helpers.
+- `SUPABASE_STORAGE_ROLE`: database role embedded into the dedicated Storage upload JWT.
+- `SUPABASE_STORAGE_RETRIES` and `SUPABASE_STORAGE_RETRY_SLEEP_SECONDS`: startup resilience controls for Storage uploads while the stack finishes stabilizing.
 
 ## Docker-First Start
 
@@ -60,6 +71,9 @@ What this command does:
 - Starts Ollama, Supabase services, and the dashboard container.
 - Pulls the local Ollama model inside the Ollama container on first boot.
 - Runs the ETL container so the database is initialized and the source file is ingested inside Docker.
+- Runs the `ml-trainer` container so the quality-risk model is trained, evaluated, versioned, and scored automatically.
+- Runs the official Supabase Storage tenant migrations before the upload steps.
+- Compares multiple candidate models, tracks overfit gap, and promotes the best-performing candidate to active status.
 
 If you want a different model, update `OLLAMA_MODEL` in `.env` before starting:
 
@@ -88,9 +102,16 @@ Expected outputs after a successful run:
 - `reports/data_quality.json`
 - `reports/data_quality.html`
 - `reports/inconsistencies.csv`
+- `artifacts/models/<model-version>.joblib`
+- `artifacts/models/<model-version>.metadata.json`
 - new rows in `raw_ingest.files`
 - new audit rows in `audit.data_quality_runs` and `audit.inconsistencies`
 - step timings in `ops.etl_step_metrics`
+- model registry rows in `mlops.training_runs`
+- row-level predictions in `mlops.predictions`
+- monitoring snapshots in `mlops.monitoring_runs`
+- optional model artifact copies in Supabase Storage
+- automatic Storage copies of reports and trained models when the stack starts cleanly
 
 The ETL is idempotent by checksum. If you run the same file again without changes, it should skip the duplicate load.
 
@@ -137,7 +158,8 @@ Important:
 3. Use the Overview tab for KPIs and the research summary.
 4. Use Geographic Coverage for province and canton analysis.
 5. Use Data Quality and Monitoring for the MLOps view.
-6. Use the interpretation button only after Ollama has the model ready.
+6. Use the MLOps tab for model registry, metrics, feature importance, and highest-risk rows.
+7. Use the interpretation button only after Ollama has the model ready.
 
 ## What Not To Change Unless Needed
 
@@ -153,7 +175,8 @@ Important:
 - If the dashboard shows a timeout, check that the warmup container completed successfully with `docker compose ps`.
 - `Ollama` and `Postgres` are internal-only in Docker, so they should not fail because of host port collisions in the default setup.
 - If Docker shows a port-bind error now, focus on `Dashboard`, `Studio`, or `Kong`, which are the only services intentionally exposed to the host in the default setup.
-- If storage uploads fail, check `SUPABASE_SERVICE_ROLE_KEY` and `SUPABASE_STORAGE_BUCKET`.
+- If the `ml-trainer` run is `skipped`, the stack can still start correctly. That means the latest dataset did not have enough class diversity or volume for a stable supervised run.
+- If Storage uploads fail, check `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`, and `docker compose logs storage-migrate storage`.
 - If a service keeps restarting, check the container logs:
 
 ```powershell

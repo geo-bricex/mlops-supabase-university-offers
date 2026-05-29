@@ -5,6 +5,7 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
 ## Tech Stack
 - **Database**: Supabase (Postgres, Kong, GoTrue, Realtime, etc.)
 - **ETL**: Python, Pandas, SQLAlchemy (Incremental Loading, SCD Type 2)
+- **ML**: scikit-learn quality-risk classifier with registry, evaluation, scoring, and monitoring
 - **Dashboard**: Streamlit (Geospatial analysis, Time series)
 - **Containerization**: Docker Compose
 
@@ -27,28 +28,49 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
 
 2. **ETL**
    The `etl` container boots with the stack, initializes the schema, and ingests the file defined in `SOURCE_FILE`.
+   After ETL completes, the `ml-trainer` container trains and registers the latest quality-risk model automatically.
    If you replace the source file and need to rerun the load, use:
    ```bash
    docker compose run --rm etl
    ```
 
-3. **View Dashboard**
+3. **MLOps Training**
+   The `ml-trainer` service turns the audited ingest into a supervised ML task:
+   - target: whether a staged row is likely to contain a data-quality issue
+   - training: automated after ETL
+   - model selection: evaluates multiple candidate models and activates the best one
+   - candidate family: regularized logistic variants, Extra Trees, and Random Forest
+   - evaluation: holdout metrics stored in `mlops.training_runs.metrics`
+   - anti-overfitting guard: cross-validation, bounded tree depth, regularization, train-vs-test gap tracking, and a conservative decision threshold
+   - registry: versioned model artifact saved in `artifacts/models`
+   - scoring: row-level probabilities stored in `mlops.predictions`
+   - persistence: artifact is kept on disk and also uploaded to Supabase Storage through the same stack
+   - monitoring: snapshots stored in `mlops.monitoring_runs`
+
+   If the latest dataset does not have enough class diversity to train a meaningful model, the trainer records a `skipped` run instead of breaking the stack.
+
+4. **View Dashboard**
    Navigate to [http://localhost:8501](http://localhost:8501).
 
-4. **Local LLM (Ollama)**
+5. **Local LLM (Ollama)**
    The Ollama container pulls the configured model on first boot and the `ollama-warmup` container loads it once before the dashboard becomes available.
    The dashboard uses `OLLAMA_INTERNAL_URL` for container-to-container traffic.
    The safer default is `qwen2.5:1.5b` because it is more replicable on modest machines. If you need a different model, update `OLLAMA_MODEL` in `.env` before starting.
    To ingest another dataset, change `SOURCE_FILE` in `.env`.
 
-5. **Reports**
+6. **Reports**
    The ETL writes:
    - `reports/data_quality.json`
    - `reports/data_quality.html`
    - `reports/inconsistencies.csv`
+   The MLOps layer writes:
+   - `artifacts/models/<model-version>.joblib`
 
-6. **Storage & Monitoring**
+7. **Storage & Monitoring**
+   The stack now runs a dedicated `storage-migrate` step before ETL so Supabase Storage is provisioned automatically.
    If `SUPABASE_SERVICE_ROLE_KEY` is set, the ETL uploads the source file and reports to Supabase Storage.
+   The MLOps trainer uploads the model artifact and metadata JSON to the same bucket.
+   Uploads use the internal Storage endpoint defined by `SUPABASE_STORAGE_URL_INTERNAL`, so they do not depend on host routing.
    Configure the bucket with `SUPABASE_STORAGE_BUCKET` and access it in Studio under Storage.
    Pipeline run metrics (duration, file size, change counts, storage status) are tracked in `raw_ingest.files`
    and visualized in the dashboard Timeline and Monitoring tabs. Step-level timings are captured in
@@ -63,7 +85,7 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
    ```
    Override endpoints using `SUPABASE_HEALTH_ENDPOINTS` (JSON map) if running outside Docker.
 
-7. **PostgREST + RPC Analytics**
+8. **PostgREST + RPC Analytics**
    Apply schema updates if needed:
    ```bash
    docker compose exec dashboard python -m src.db.init_db
@@ -86,9 +108,11 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
 ## Troubleshooting
 - `Ollama` and `Postgres` are internal-only services in Docker, so they should not fail because of host port collisions.
 - If Docker reports a port-bind error now, it is more likely coming from `Dashboard`, `Studio`, or `Kong`, which are the only host-facing services required for the default demo.
+- If you want to inspect the ML outputs through APIs, the `mlops` schema is exposed through PostgREST together with `core`, `audit`, and `ops`.
 - If Supabase services (auth, rest, realtime, storage) keep restarting due to password errors, recreate the stack from scratch with `docker compose down -v` and start again after confirming `.env`.
-- Artifact upload to Storage is optional. If `SUPABASE_SERVICE_ROLE_KEY` is missing or Storage is not fully provisioned yet, the ETL still completes and only skips uploads.
+- If artifact upload still fails, check `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`, and the `storage-migrate` logs first.
 - If local LLM interpretation is still slow, keep `qwen2.5:1.5b` or reduce `OLLAMA_NUM_PREDICT` before moving to a larger model.
+- If you want to tune model selection, review `ML_PRIMARY_SELECTION_METRIC`, `ML_RISK_THRESHOLD`, and the MLOps tab in the dashboard.
 - If you change `JWT_SECRET`, keep the anon/service tokens in `.env` and `docker/volumes/api/kong.yml` aligned.
 
 ## Project Structure

@@ -9,6 +9,8 @@ pydeck
 openpyxl
 rapidfuzz
 requests
+scikit-learn
+joblib
 # Add src dependencies if needed, but these cover most.
 pytest
 supabase

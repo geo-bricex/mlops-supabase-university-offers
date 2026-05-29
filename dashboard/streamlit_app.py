@@ -233,6 +233,181 @@ def explain_ollama_error(exc: Exception, settings: dict, status: dict) -> str:
     return f"LLM error: {exc}"
 
 
+def safe_float(value, default=0.0):
+    try:
+        if value is None or (isinstance(value, float) and np.isnan(value)):
+            return default
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def score_label(score: float) -> str:
+    if score >= 0.9:
+        return "very strong"
+    if score >= 0.8:
+        return "strong"
+    if score >= 0.7:
+        return "useful"
+    if score >= 0.6:
+        return "moderate"
+    return "weak"
+
+
+def render_storage_links(paths_dict):
+    if not paths_dict:
+        st.info("No stored artifacts were found for this run.")
+        return
+    for artifact_name, info in paths_dict.items():
+        if not isinstance(info, dict):
+            st.markdown(f"- {artifact_name}: {info}")
+            continue
+        url = info.get("url")
+        path = info.get("path", artifact_name)
+        if url:
+            st.markdown(f"- `{artifact_name}`: [{path}]({url})")
+        else:
+            st.markdown(f"- `{artifact_name}`: `{path}`")
+
+
+def build_model_summary(latest_metrics, latest_cv_metrics, latest_run, predictions, monitoring_metrics):
+    f1_score_value = safe_float(latest_metrics.get("f1"))
+    recall = safe_float(latest_metrics.get("recall"))
+    precision = safe_float(latest_metrics.get("precision"))
+    roc_auc = safe_float(latest_metrics.get("roc_auc"))
+    overfit_gap = abs(safe_float(latest_run.get("overfit_gap")))
+    candidate_count = int((latest_metrics.get("regularization_guard") or {}).get("candidate_count") or 0)
+    selected_candidate = latest_metrics.get("selected_candidate") or latest_run.get("algorithm") or "n/a"
+    storage_status = latest_run.get("storage_status") or "n/a"
+    high_risk_count = 0
+    if not predictions.empty and "risk_label" in predictions.columns:
+        high_risk_count = int(predictions["risk_label"].fillna(False).astype(bool).sum())
+    prediction_positive_rate = safe_float(monitoring_metrics.get("prediction_positive_rate"))
+    actual_positive_rate = safe_float(monitoring_metrics.get("actual_positive_rate"))
+
+    summary = [
+        (
+            f"The active model is **{score_label(f1_score_value)}** overall: "
+            f"F1 `{f1_score_value:.3f}` and ROC AUC `{roc_auc:.3f}`."
+        ),
+        (
+            f"It is currently better at **finding risky rows** than being ultra conservative: "
+            f"recall `{recall:.3f}` and precision `{precision:.3f}`."
+        ),
+        (
+            f"The selected algorithm was **{selected_candidate}**, chosen after comparing "
+            f"`{candidate_count}` candidate models with cross-validation."
+        ),
+        (
+            f"The overfit gap is `{overfit_gap:.3f}`. "
+            + ("This is low and healthy." if overfit_gap <= 0.05 else "This deserves closer review.")
+        ),
+        (
+            f"The model currently flags about `{prediction_positive_rate:.1%}` of rows as risky, "
+            f"while the observed issue rate is `{actual_positive_rate:.1%}`."
+        ),
+        (
+            f"Stored artifacts are **{storage_status}**, and the current preview shows "
+            f"`{high_risk_count}` high-risk rows in the latest scored sample."
+        ),
+    ]
+    if latest_cv_metrics:
+        summary.append(
+            f"Cross-validation stayed stable: mean F1 `{safe_float(latest_cv_metrics.get('mean_f1')):.3f}` "
+            f"with average precision `{safe_float(latest_cv_metrics.get('mean_average_precision')):.3f}`."
+        )
+    return summary
+
+
+def build_monitoring_summary(monitoring_metrics):
+    if not monitoring_metrics:
+        return []
+    prediction_positive_rate = safe_float(monitoring_metrics.get("prediction_positive_rate"))
+    actual_positive_rate = safe_float(monitoring_metrics.get("actual_positive_rate"))
+    mean_probability = safe_float(monitoring_metrics.get("mean_risk_probability"))
+    top10_probability = safe_float(monitoring_metrics.get("top_10_mean_probability"))
+    return [
+        f"On the full scored dataset, the model marked `{prediction_positive_rate:.1%}` of rows as risky.",
+        f"The observed issue rate in that same dataset is `{actual_positive_rate:.1%}`.",
+        f"The average predicted risk is `{mean_probability:.3f}`, which gives a sense of the model's general caution level.",
+        f"The top 10 most suspicious rows have an average risk of `{top10_probability:.3f}`.",
+    ]
+
+
+def build_ml_llm_context(latest_run, latest_metrics, latest_train_metrics, latest_cv_metrics, candidate_rows, predictions, monitoring_metrics):
+    top_predictions = predictions.head(10) if not predictions.empty else pd.DataFrame()
+    top_risk_preview = "n/a"
+    if not top_predictions.empty:
+        preview_rows = []
+        for _, row in top_predictions.iterrows():
+            preview_rows.append(
+                f"row {int(row['row_num'])} | risk={safe_float(row['risk_probability']):.3f} | "
+                f"IES={row.get('nombre_ies', 'n/a')} | program={row.get('nombre_carrera', 'n/a')} | "
+                f"province={row.get('provincia', 'n/a')} | state={row.get('estado', 'n/a')}"
+            )
+        top_risk_preview = "; ".join(preview_rows)
+
+    candidate_text = "n/a"
+    if candidate_rows:
+        candidate_text = "; ".join(
+            [
+                (
+                    f"{row.get('name')}: "
+                    f"mean_f1={safe_float(row.get('mean_f1')):.3f}, "
+                    f"mean_ap={safe_float(row.get('mean_average_precision')):.3f}, "
+                    f"mean_roc_auc={safe_float(row.get('mean_roc_auc')):.3f}"
+                )
+                for row in candidate_rows
+            ]
+        )
+
+    return textwrap.dedent(
+        f"""
+        Predictive quality section summary
+        - Model name: {latest_run.get('model_name')}
+        - Model version: {latest_run.get('model_version')}
+        - Selected candidate: {latest_metrics.get('selected_candidate')}
+        - Storage status: {latest_run.get('storage_status')}
+        - Holdout F1: {safe_float(latest_metrics.get('f1')):.3f}
+        - Holdout precision: {safe_float(latest_metrics.get('precision')):.3f}
+        - Holdout recall: {safe_float(latest_metrics.get('recall')):.3f}
+        - Holdout ROC AUC: {safe_float(latest_metrics.get('roc_auc')):.3f}
+        - Holdout average precision: {safe_float(latest_metrics.get('average_precision')):.3f}
+        - Overfit gap: {safe_float(latest_run.get('overfit_gap')):.3f}
+        - Train F1: {safe_float(latest_train_metrics.get('f1')):.3f}
+        - CV mean F1: {safe_float(latest_cv_metrics.get('mean_f1')):.3f}
+        - CV mean average precision: {safe_float(latest_cv_metrics.get('mean_average_precision')):.3f}
+        - Candidate comparison: {candidate_text}
+        - Monitoring prediction positive rate: {safe_float(monitoring_metrics.get('prediction_positive_rate')):.3%}
+        - Monitoring actual positive rate: {safe_float(monitoring_metrics.get('actual_positive_rate')):.3%}
+        - Monitoring mean risk probability: {safe_float(monitoring_metrics.get('mean_risk_probability')):.3f}
+        - Highest risk sample rows: {top_risk_preview}
+        """
+    ).strip()
+
+
+def build_ml_focus_prompt(section_focus: str) -> str:
+    prompts = {
+        "Executive summary": (
+            "Summarize the predictive section for a non-technical research reader. "
+            "Explain whether the model is trustworthy, what it is good at, and what decisions should be made first."
+        ),
+        "Candidate models": (
+            "Compare the candidate models in simple language. "
+            "Explain why the winning model likely won, what trade-offs exist, and whether the selection looks robust."
+        ),
+        "High-risk rows": (
+            "Explain what the high-risk rows mean in practice. "
+            "Describe what patterns deserve manual review first and what a research team should do next."
+        ),
+        "Monitoring snapshot": (
+            "Interpret the monitoring metrics in simple language. "
+            "Explain whether the live scoring behaviour looks stable and what warning signs should be watched."
+        ),
+    }
+    return prompts.get(section_focus, prompts["Executive summary"])
+
+
 engine = get_engine()
 if os.getenv("DB_AUTO_INIT", "true").lower() in ("1", "true", "yes"):
     try:
@@ -347,8 +522,8 @@ if filtered.empty:
     st.warning("No records match the selected filters.")
 has_data = not filtered.empty
 
-tab_overview, tab_geo, tab_diversity, tab_quality, tab_timeline, tab_monitoring = st.tabs(
-    ["Overview", "Geographic Coverage", "Diversity & Institutions", "Data Quality", "Timeline", "Monitoring"]
+tab_overview, tab_geo, tab_diversity, tab_quality, tab_timeline, tab_monitoring, tab_mlops = st.tabs(
+    ["Overview", "Geographic Coverage", "Diversity & Institutions", "Data Quality", "Timeline", "Monitoring", "AI & Risk Analysis"]
 )
 
 with tab_overview:
@@ -856,3 +1031,346 @@ with tab_monitoring:
             show_dataframe(artifact_df, use_container_width=True)
         else:
             st.info("Storage uploads are not available yet. Check SUPABASE_SERVICE_ROLE_KEY and rerun ETL.")
+
+with tab_mlops:
+    st.header("AI & Risk Analysis")
+    st.caption(
+        "This section explains the predictive model in plain language: how reliable it is, "
+        "what kind of risky rows it catches, and where to inspect first."
+    )
+
+    try:
+        training_runs = load_data("""
+            SELECT
+                run_id,
+                file_id,
+                model_name,
+                model_version,
+                task_name,
+                algorithm,
+                target_name,
+                status,
+                started_at,
+                finished_at,
+                duration_seconds,
+                train_rows,
+                test_rows,
+                positive_rows,
+                positive_rate,
+                selected_metric,
+                train_metrics,
+                cv_metrics,
+                candidate_metrics,
+                overfit_gap,
+                metrics,
+                artifact_path,
+                storage_status,
+                storage_paths,
+                is_active
+            FROM mlops.training_runs
+            ORDER BY started_at DESC
+        """)
+    except Exception:
+        training_runs = pd.DataFrame()
+
+    if training_runs.empty:
+        st.info("No ML training runs found yet. The `ml-trainer` service populates this section.")
+    else:
+        training_runs["metrics_dict"] = training_runs["metrics"].apply(parse_metrics)
+        training_runs["train_metrics_dict"] = training_runs["train_metrics"].apply(parse_metrics)
+        training_runs["cv_metrics_dict"] = training_runs["cv_metrics"].apply(parse_metrics)
+        training_runs["candidate_metrics_dict"] = training_runs["candidate_metrics"].apply(parse_metrics)
+        training_runs["storage_paths_dict"] = training_runs["storage_paths"].apply(parse_json_value)
+
+        latest_run = training_runs.iloc[0]
+        latest_metrics = latest_run["metrics_dict"] or {}
+        latest_train_metrics = latest_run["train_metrics_dict"] or {}
+        latest_cv_metrics = latest_run["cv_metrics_dict"] or {}
+        latest_candidates = latest_run["candidate_metrics_dict"] or {}
+        candidate_rows = latest_candidates.get("candidates") or []
+
+        try:
+            predictions = load_data("""
+                SELECT
+                    row_num,
+                    natural_key,
+                    risk_probability,
+                    risk_label,
+                    actual_label,
+                    nombre_ies,
+                    nombre_carrera,
+                    provincia,
+                    canton,
+                    estado,
+                    model_version
+                FROM mlops.v_latest_quality_risk_predictions
+                ORDER BY risk_probability DESC, row_num ASC
+                LIMIT 200
+            """)
+        except Exception:
+            predictions = pd.DataFrame()
+
+        try:
+            monitoring_runs = load_data("""
+                SELECT monitor_id, run_id, file_id, created_at, metrics
+                FROM mlops.monitoring_runs
+                ORDER BY created_at DESC
+            """)
+        except Exception:
+            monitoring_runs = pd.DataFrame()
+
+        latest_monitoring_metrics = {}
+        if not monitoring_runs.empty:
+            monitoring_runs["metrics_dict"] = monitoring_runs["metrics"].apply(parse_metrics)
+            latest_monitoring_metrics = monitoring_runs.iloc[0]["metrics_dict"] or {}
+
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Current Model", latest_run.get("model_name") or "n/a")
+        m2.metric("Version", latest_run.get("model_version") or "n/a")
+        m3.metric("Balanced Score (F1)", f"{safe_float(latest_metrics.get('f1')):.3f}")
+        m4.metric("Ranking Quality (ROC AUC)", f"{safe_float(latest_metrics.get('roc_auc')):.3f}")
+
+        g1, g2, g3, g4 = st.columns(4)
+        g1.metric("Winning Algorithm", latest_metrics.get("selected_candidate") or latest_run.get("algorithm") or "n/a")
+        g2.metric("Selection Metric", latest_run.get("selected_metric") or "n/a")
+        g3.metric("Overfit Gap", f"{safe_float(latest_run.get('overfit_gap')):.3f}")
+        g4.metric("Stored Files", latest_run.get("storage_status") or "n/a")
+
+        st.subheader("What This Means")
+        for summary_line in build_model_summary(
+            latest_metrics,
+            latest_cv_metrics,
+            latest_run,
+            predictions,
+            latest_monitoring_metrics,
+        ):
+            st.markdown(f"- {summary_line}")
+
+        help_col1, help_col2 = st.columns([2, 1])
+        with help_col1:
+            st.info(
+                "Quick guide: `precision` tells you how often a risky alert is correct, "
+                "`recall` tells you how many problematic rows the model manages to catch, "
+                "and `F1` balances both."
+            )
+        with help_col2:
+            if latest_run.get("storage_status") == "success":
+                st.success("The active model is persisted.")
+            else:
+                st.warning("The active model is not fully persisted yet.")
+
+        st.subheader("Reliability Breakdown")
+        reliability_cols = st.columns(4)
+        reliability_metrics = [
+            ("Precision", safe_float(latest_metrics.get("precision"))),
+            ("Recall", safe_float(latest_metrics.get("recall"))),
+            ("F1", safe_float(latest_metrics.get("f1"))),
+            ("Average Precision", safe_float(latest_metrics.get("average_precision"))),
+        ]
+        for column, (label, value) in zip(reliability_cols, reliability_metrics):
+            with column:
+                st.metric(label, f"{value:.3f}")
+                st.progress(max(0, min(int(round(value * 100)), 100)), text=f"{value:.0%}")
+
+        st.subheader("AI Explanation")
+        settings = get_ollama_settings()
+        ollama_status = get_ollama_status(settings["internal_url"], settings["model"])
+        ml_focus = st.selectbox(
+            "What should the AI explain?",
+            [
+                "Executive summary",
+                "Candidate models",
+                "High-risk rows",
+                "Monitoring snapshot",
+            ],
+            index=0,
+            key="ml_llm_focus",
+        )
+        ml_question = st.text_input(
+            "Optional question about this section",
+            value="Explain in simple words if the model is reliable and what should be reviewed first.",
+            key="ml_llm_question",
+        )
+        if st.button("Explain this predictive section with local AI", key="ml_llm_button"):
+            with st.spinner("Generating explanation..."):
+                try:
+                    if not ollama_status["ready"]:
+                        raise RuntimeError(
+                            "The local model is not ready yet. Wait for Ollama warmup to finish."
+                        )
+                    ml_context = build_ml_llm_context(
+                        latest_run,
+                        latest_metrics,
+                        latest_train_metrics,
+                        latest_cv_metrics,
+                        candidate_rows,
+                        predictions,
+                        latest_monitoring_metrics,
+                    )
+                    focused_prompt = (
+                        f"{build_ml_focus_prompt(ml_focus)} "
+                        f"Additional user question: {ml_question.strip() or 'none'}"
+                    )
+                    st.session_state["ml_llm_response"] = call_ollama(
+                        build_llm_prompt(ml_context, focused_prompt)
+                    )
+                except requests.RequestException as exc:
+                    st.error(explain_ollama_error(exc, settings, ollama_status))
+                except RuntimeError as exc:
+                    st.error(str(exc))
+                except Exception as exc:
+                    st.error(f"LLM error inesperado: {exc}")
+
+        if st.session_state.get("ml_llm_response"):
+            st.markdown(st.session_state["ml_llm_response"])
+
+        if candidate_rows:
+            st.subheader("Candidate Model Comparison")
+            candidate_df = pd.DataFrame(candidate_rows)
+            candidate_df = candidate_df.sort_values(
+                by=["mean_average_precision", "mean_f1"],
+                ascending=False,
+            )
+            winner_name = latest_metrics.get("selected_candidate") or latest_run.get("algorithm")
+            if winner_name:
+                st.success(f"Selected winner: `{winner_name}`")
+            fig_candidates = px.bar(
+                candidate_df,
+                x="name",
+                y=["mean_average_precision", "mean_f1", "mean_roc_auc"],
+                barmode="group",
+                title="Candidate Model Comparison"
+            )
+            st.plotly_chart(fig_candidates, use_container_width=True)
+            with st.expander("Open detailed candidate metrics"):
+                show_dataframe(candidate_df, use_container_width=True)
+
+        history_rows = []
+        for _, row in training_runs.iterrows():
+            metrics = row.get("metrics_dict") or {}
+            history_rows.append({
+                "started_at": row.get("started_at"),
+                "model_version": row.get("model_version"),
+                "f1": metrics.get("f1"),
+                "precision": metrics.get("precision"),
+                "recall": metrics.get("recall"),
+                "roc_auc": metrics.get("roc_auc"),
+            })
+        history_df = pd.DataFrame(history_rows).dropna(subset=["started_at"])
+        if not history_df.empty:
+            history_long = history_df.melt(
+                id_vars=["started_at", "model_version"],
+                var_name="metric",
+                value_name="value"
+            ).dropna(subset=["value"])
+            if not history_long.empty:
+                fig_history = px.line(
+                    history_long,
+                    x="started_at",
+                    y="value",
+                    color="metric",
+                    markers=True,
+                    hover_data=["model_version"],
+                    title="Model Metrics Over Time"
+                )
+                st.plotly_chart(fig_history, use_container_width=True)
+
+        try:
+            importances = load_data("""
+                SELECT run_id, feature_name, importance, direction, rank
+                FROM mlops.feature_importance
+                WHERE run_id = :run_id
+                ORDER BY rank ASC
+            """, {"run_id": latest_run["run_id"]})
+        except Exception:
+            importances = pd.DataFrame()
+
+        if not importances.empty:
+            st.subheader("What Drives the Risk Score")
+            fig_importance = px.bar(
+                importances.sort_values("rank"),
+                x="importance",
+                y="feature_name",
+                color="direction",
+                orientation="h",
+                title="Top Drivers of Quality Risk"
+            )
+            st.plotly_chart(fig_importance, use_container_width=True)
+            with st.expander("Open feature importance details"):
+                show_dataframe(importances, use_container_width=True)
+
+        if not predictions.empty:
+            st.subheader("Highest Risk Records")
+            preview = predictions.copy()
+            preview["risk_percent"] = preview["risk_probability"].apply(lambda value: round(safe_float(value) * 100, 1))
+            risk_threshold = safe_float(latest_metrics.get("threshold"), 0.5)
+            p1, p2, p3 = st.columns(3)
+            p1.metric("Rows in Preview", len(preview))
+            p2.metric("Rows Above Threshold", int(preview["risk_label"].fillna(False).astype(bool).sum()))
+            p3.metric("Risk Threshold", f"{risk_threshold:.2f}")
+
+            fig_risk = px.histogram(
+                preview,
+                x="risk_probability",
+                nbins=20,
+                color="actual_label",
+                title="Risk Probability Distribution"
+            )
+            st.plotly_chart(fig_risk, use_container_width=True)
+            st.caption("Preview below is limited to the highest-risk rows so the review starts with the most suspicious cases.")
+            show_dataframe(
+                preview.head(25)[
+                    [
+                        "row_num",
+                        "risk_percent",
+                        "risk_label",
+                        "actual_label",
+                        "nombre_ies",
+                        "nombre_carrera",
+                        "provincia",
+                        "canton",
+                        "estado",
+                    ]
+                ],
+                use_container_width=True,
+            )
+
+        if latest_monitoring_metrics:
+            st.subheader("Monitoring Snapshot")
+            for summary_line in build_monitoring_summary(latest_monitoring_metrics):
+                st.markdown(f"- {summary_line}")
+            with st.expander("Open latest monitoring details"):
+                st.json(latest_monitoring_metrics)
+
+        with st.expander("Open stored model files"):
+            render_storage_links(latest_run.get("storage_paths_dict"))
+
+        with st.expander("Open latest training run details"):
+            st.json({
+                "run_id": latest_run.get("run_id"),
+                "model_name": latest_run.get("model_name"),
+                "model_version": latest_run.get("model_version"),
+                "algorithm": latest_run.get("algorithm"),
+                "target_name": latest_run.get("target_name"),
+                "status": latest_run.get("status"),
+                "artifact_path": latest_run.get("artifact_path"),
+                "storage_status": latest_run.get("storage_status"),
+                "storage_paths": latest_run.get("storage_paths_dict"),
+                "metrics": latest_metrics,
+                "train_metrics": latest_train_metrics,
+                "cv_metrics": latest_cv_metrics,
+            })
+
+        with st.expander("Open training run history"):
+            show_dataframe(
+                training_runs.drop(
+                    columns=[
+                        "metrics_dict",
+                        "train_metrics_dict",
+                        "cv_metrics_dict",
+                        "candidate_metrics_dict",
+                        "storage_paths_dict",
+                    ]
+                ),
+                use_container_width=True,
+            )

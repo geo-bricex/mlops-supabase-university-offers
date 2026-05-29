@@ -1,4 +1,11 @@
 .env
+__pycache__/
+*.pyc
+artifacts/
+.pytest_cache/
 
 # Docker volumes / local state
 docker/volumes/
+
+# Local paper workspace
+ARTICLE/

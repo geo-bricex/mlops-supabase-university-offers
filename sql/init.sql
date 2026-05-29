@@ -6,6 +6,7 @@ CREATE SCHEMA IF NOT EXISTS raw_ingest;
 CREATE SCHEMA IF NOT EXISTS core;
 CREATE SCHEMA IF NOT EXISTS audit;
 CREATE SCHEMA IF NOT EXISTS ops;
+CREATE SCHEMA IF NOT EXISTS mlops;
 
 -- 1) raw_ingest.files
 CREATE TABLE IF NOT EXISTS raw_ingest.files (
@@ -268,6 +269,176 @@ CREATE INDEX IF NOT EXISTS idx_etl_step_metrics_step_name
 CREATE INDEX IF NOT EXISTS idx_etl_step_metrics_started_at
     ON ops.etl_step_metrics(started_at);
 
+-- 7) MLOps registry, predictions, and monitoring
+CREATE TABLE IF NOT EXISTS mlops.training_runs (
+    run_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    file_id UUID REFERENCES raw_ingest.files(file_id),
+    model_name TEXT NOT NULL,
+    model_version TEXT NOT NULL UNIQUE,
+    task_name TEXT NOT NULL,
+    algorithm TEXT NOT NULL,
+    target_name TEXT NOT NULL,
+    status TEXT CHECK (status IN ('success', 'failed', 'skipped', 'running')),
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    finished_at TIMESTAMP WITH TIME ZONE,
+    duration_seconds NUMERIC,
+    train_rows INT,
+    test_rows INT,
+    positive_rows INT,
+    positive_rate NUMERIC,
+    selected_metric TEXT,
+    train_metrics JSONB,
+    cv_metrics JSONB,
+    candidate_metrics JSONB,
+    overfit_gap NUMERIC,
+    metrics JSONB,
+    artifact_path TEXT,
+    artifact_sha256 TEXT,
+    storage_status TEXT,
+    storage_paths JSONB,
+    feature_schema JSONB,
+    notes TEXT,
+    is_active BOOLEAN DEFAULT FALSE
+);
+
+CREATE INDEX IF NOT EXISTS idx_mlops_training_runs_started_at
+    ON mlops.training_runs(started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_mlops_training_runs_model_name
+    ON mlops.training_runs(model_name);
+CREATE INDEX IF NOT EXISTS idx_mlops_training_runs_is_active
+    ON mlops.training_runs(is_active);
+
+CREATE TABLE IF NOT EXISTS mlops.feature_importance (
+    importance_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    run_id UUID REFERENCES mlops.training_runs(run_id),
+    feature_name TEXT NOT NULL,
+    importance NUMERIC NOT NULL,
+    direction TEXT,
+    rank INT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_mlops_feature_importance_run_id
+    ON mlops.feature_importance(run_id);
+
+CREATE TABLE IF NOT EXISTS mlops.predictions (
+    prediction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    run_id UUID REFERENCES mlops.training_runs(run_id),
+    file_id UUID REFERENCES raw_ingest.files(file_id),
+    row_num INT,
+    natural_key TEXT,
+    risk_label BOOLEAN,
+    risk_probability NUMERIC,
+    actual_label BOOLEAN,
+    threshold NUMERIC,
+    predicted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    detail JSONB
+);
+
+CREATE INDEX IF NOT EXISTS idx_mlops_predictions_run_id
+    ON mlops.predictions(run_id);
+CREATE INDEX IF NOT EXISTS idx_mlops_predictions_file_id
+    ON mlops.predictions(file_id);
+CREATE INDEX IF NOT EXISTS idx_mlops_predictions_probability
+    ON mlops.predictions(risk_probability DESC);
+
+CREATE TABLE IF NOT EXISTS mlops.monitoring_runs (
+    monitor_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    run_id UUID REFERENCES mlops.training_runs(run_id),
+    file_id UUID REFERENCES raw_ingest.files(file_id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    metrics JSONB
+);
+
+CREATE INDEX IF NOT EXISTS idx_mlops_monitoring_runs_run_id
+    ON mlops.monitoring_runs(run_id);
+CREATE INDEX IF NOT EXISTS idx_mlops_monitoring_runs_created_at
+    ON mlops.monitoring_runs(created_at DESC);
+
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS selected_metric TEXT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS train_metrics JSONB;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS cv_metrics JSONB;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS candidate_metrics JSONB;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS overfit_gap NUMERIC;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS storage_status TEXT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS storage_paths JSONB;
+
+CREATE OR REPLACE VIEW mlops.v_latest_training_run AS
+SELECT *
+FROM mlops.training_runs
+WHERE is_active = TRUE
+ORDER BY started_at DESC;
+
+CREATE OR REPLACE VIEW mlops.v_latest_quality_risk_predictions AS
+SELECT
+    p.prediction_id,
+    p.run_id,
+    p.file_id,
+    p.row_num,
+    p.natural_key,
+    p.risk_label,
+    p.risk_probability,
+    p.actual_label,
+    p.threshold,
+    p.predicted_at,
+    t.model_name,
+    t.model_version,
+    s.nombre_ies,
+    s.nombre_carrera,
+    s.tipo_ies,
+    s.modalidad,
+    s.provincia,
+    s.canton,
+    s.estado
+FROM mlops.predictions p
+JOIN mlops.training_runs t ON p.run_id = t.run_id
+LEFT JOIN raw_ingest.stg_oferta s
+    ON p.file_id = s.file_id
+   AND p.row_num = s.row_num
+WHERE t.is_active = TRUE;
+
+CREATE OR REPLACE FUNCTION mlops.rpc_latest_quality_risks(limit_count INT DEFAULT 50)
+RETURNS TABLE (
+    file_id UUID,
+    row_num INT,
+    natural_key TEXT,
+    risk_probability NUMERIC,
+    risk_label BOOLEAN,
+    actual_label BOOLEAN,
+    model_version TEXT,
+    nombre_ies TEXT,
+    nombre_carrera TEXT,
+    provincia TEXT,
+    canton TEXT,
+    estado TEXT
+)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = mlops, raw_ingest, public
+AS $$
+    SELECT
+        p.file_id,
+        p.row_num,
+        p.natural_key,
+        p.risk_probability,
+        p.risk_label,
+        p.actual_label,
+        t.model_version,
+        s.nombre_ies,
+        s.nombre_carrera,
+        s.provincia,
+        s.canton,
+        s.estado
+    FROM mlops.predictions p
+    JOIN mlops.training_runs t ON p.run_id = t.run_id
+    LEFT JOIN raw_ingest.stg_oferta s
+        ON p.file_id = s.file_id
+       AND p.row_num = s.row_num
+    WHERE t.is_active = TRUE
+    ORDER BY p.risk_probability DESC, p.predicted_at DESC
+    LIMIT limit_count;
+$$;
+
 -- Enable RLS (Optional but recommended for Supabase)
 ALTER TABLE raw_ingest.files ENABLE ROW LEVEL SECURITY;
 ALTER TABLE raw_ingest.stg_oferta ENABLE ROW LEVEL SECURITY;
@@ -279,6 +450,10 @@ ALTER TABLE audit.data_quality_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit.inconsistencies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ops.service_health ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ops.etl_step_metrics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mlops.training_runs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mlops.feature_importance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mlops.predictions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mlops.monitoring_runs ENABLE ROW LEVEL SECURITY;
 
 -- Allow public access for local dev (simply for ease of use in this context)
 -- In prod, you would configure specific policies.
@@ -302,6 +477,14 @@ DROP POLICY IF EXISTS "Enable all for anon/service_role" ON ops.service_health;
 CREATE POLICY "Enable all for anon/service_role" ON ops.service_health FOR ALL USING (true) WITH CHECK (true);
 DROP POLICY IF EXISTS "Enable all for anon/service_role" ON ops.etl_step_metrics;
 CREATE POLICY "Enable all for anon/service_role" ON ops.etl_step_metrics FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.training_runs;
+CREATE POLICY "Enable all for anon/service_role" ON mlops.training_runs FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.feature_importance;
+CREATE POLICY "Enable all for anon/service_role" ON mlops.feature_importance FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.predictions;
+CREATE POLICY "Enable all for anon/service_role" ON mlops.predictions FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.monitoring_runs;
+CREATE POLICY "Enable all for anon/service_role" ON mlops.monitoring_runs FOR ALL USING (true) WITH CHECK (true);
 
 -- Grants for PostgREST + RPC
 GRANT USAGE ON SCHEMA core TO anon, authenticated, service_role;
@@ -312,3 +495,11 @@ GRANT EXECUTE ON FUNCTION core.rpc_ingestion_series(TEXT) TO anon, authenticated
 GRANT USAGE ON SCHEMA ops TO anon, authenticated, service_role;
 GRANT SELECT ON ops.service_health TO anon, authenticated, service_role;
 GRANT SELECT ON ops.etl_step_metrics TO anon, authenticated, service_role;
+GRANT USAGE ON SCHEMA mlops TO anon, authenticated, service_role;
+GRANT SELECT ON mlops.training_runs TO anon, authenticated, service_role;
+GRANT SELECT ON mlops.feature_importance TO anon, authenticated, service_role;
+GRANT SELECT ON mlops.predictions TO anon, authenticated, service_role;
+GRANT SELECT ON mlops.monitoring_runs TO anon, authenticated, service_role;
+GRANT SELECT ON mlops.v_latest_training_run TO anon, authenticated, service_role;
+GRANT SELECT ON mlops.v_latest_quality_risk_predictions TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION mlops.rpc_latest_quality_risks(INT) TO anon, authenticated, service_role;

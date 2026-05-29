@@ -45,6 +45,20 @@ def _routine_exists(conn, schema: str, routine: str) -> bool:
     return result is not None
 
 
+def _column_exists(conn, schema: str, table: str, column: str) -> bool:
+    result = conn.execute(
+        text(
+            """
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = :schema AND table_name = :table AND column_name = :column
+            """
+        ),
+        {"schema": schema, "table": table, "column": column},
+    ).first()
+    return result is not None
+
+
 def _execute_sql_file(conn, sql_path: Path) -> None:
     sql_text = sql_path.read_text(encoding="utf-8")
     statements = _split_sql_statements(sql_text)
@@ -151,8 +165,23 @@ def ensure_schema(engine_to_use=engine, sql_path: Optional[Path] = None) -> bool
         core_exists = _table_exists(conn, "core", "dim_territory")
         ops_exists = _table_exists(conn, "ops", "service_health")
         ops_steps_exists = _table_exists(conn, "ops", "etl_step_metrics")
+        mlops_runs_exists = _table_exists(conn, "mlops", "training_runs")
+        mlops_preds_exists = _table_exists(conn, "mlops", "predictions")
+        mlops_candidate_metrics_exists = _column_exists(conn, "mlops", "training_runs", "candidate_metrics")
+        mlops_storage_paths_exists = _column_exists(conn, "mlops", "training_runs", "storage_paths")
         rpc_exists = _routine_exists(conn, "core", "rpc_ingestion_series")
-        if core_exists and ops_exists and ops_steps_exists and rpc_exists:
+        mlops_rpc_exists = _routine_exists(conn, "mlops", "rpc_latest_quality_risks")
+        if (
+            core_exists
+            and ops_exists
+            and ops_steps_exists
+            and mlops_runs_exists
+            and mlops_preds_exists
+            and mlops_candidate_metrics_exists
+            and mlops_storage_paths_exists
+            and rpc_exists
+            and mlops_rpc_exists
+        ):
             logger.info("Schema already present. Skipping init.")
             return False
         logger.info("Schema missing or needs update. Running init SQL.")

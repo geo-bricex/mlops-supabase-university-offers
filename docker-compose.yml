@@ -94,7 +94,7 @@ services:
       retries: 3
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
-      PGRST_DB_SCHEMAS: ${POSTGREST_DB_SCHEMAS}
+      PGRST_DB_SCHEMAS: public,storage,graphql_public,core,audit,ops,mlops
       PGRST_DB_ANON_ROLE: anon
       PGRST_JWT_SECRET: ${JWT_SECRET}
       PGRST_DB_USE_LEGACY_GUC_VAR: "true"
@@ -158,13 +158,48 @@ services:
       TENANT_ID: stub
       REGION: stub
       GLOBAL_S3_BUCKET: stub
+      DB_INSTALL_ROLES: "false"
+      DB_SERVICE_ROLE: supabase_storage_admin
+      DB_ANON_ROLE: supabase_storage_admin
+      DB_AUTHENTICATED_ROLE: supabase_storage_admin
     volumes:
       - ./docker/volumes/storage:/var/lib/storage
     depends_on:
       db:
         condition: service_healthy
+      storage-migrate:
+        condition: service_completed_successfully
       rest:
         condition: service_started
+    networks:
+      - supabase_network
+
+  storage-migrate:
+    container_name: supabase-storage-migrate
+    image: supabase/storage-api:v1.11.0
+    restart: "no"
+    working_dir: /app
+    command: ["node", "dist/scripts/migrate-call.js"]
+    environment:
+      ANON_KEY: ${SUPABASE_ANON_KEY}
+      SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres?options=-c%20search_path%3Dstorage%2Cpublic
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+      DB_INSTALL_ROLES: "false"
+      DB_SERVICE_ROLE: supabase_storage_admin
+      DB_ANON_ROLE: supabase_storage_admin
+      DB_AUTHENTICATED_ROLE: supabase_storage_admin
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./docker/volumes/storage:/var/lib/storage
     networks:
       - supabase_network
 
@@ -328,17 +363,23 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - SUPABASE_STORAGE_BUCKET=${SUPABASE_STORAGE_BUCKET:-etl-artifacts}
       - SUPABASE_STORAGE_PUBLIC=${SUPABASE_STORAGE_PUBLIC:-true}
+      - SUPABASE_STORAGE_URL_INTERNAL=${SUPABASE_STORAGE_URL_INTERNAL:-http://storage:5000}
       - DB_CONNECTION_STRING=postgresql://supabase_admin:${POSTGRES_PASSWORD}@db:5432/postgres
       - DB_AUTO_INIT=${DB_AUTO_INIT:-true}
+      - JWT_SECRET=${JWT_SECRET}
       - OLLAMA_INTERNAL_URL=${OLLAMA_INTERNAL_URL:-http://ollama:11434}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:1.5b}
       - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-180}
       - OLLAMA_NUM_PREDICT=${OLLAMA_NUM_PREDICT:-220}
       - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-30m}
+      - ML_MODEL_NAME=${ML_MODEL_NAME:-quality_risk_classifier}
+      - ML_RISK_THRESHOLD=${ML_RISK_THRESHOLD:-0.5}
     depends_on:
       db:
         condition: service_healthy
       etl:
+        condition: service_completed_successfully
+      ml-trainer:
         condition: service_completed_successfully
       ollama:
         condition: service_healthy
@@ -365,8 +406,10 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - SUPABASE_STORAGE_BUCKET=${SUPABASE_STORAGE_BUCKET:-etl-artifacts}
       - SUPABASE_STORAGE_PUBLIC=${SUPABASE_STORAGE_PUBLIC:-true}
+      - SUPABASE_STORAGE_URL_INTERNAL=${SUPABASE_STORAGE_URL_INTERNAL:-http://storage:5000}
       - DB_CONNECTION_STRING=postgresql://supabase_admin:${POSTGRES_PASSWORD}@db:5432/postgres
       - DB_AUTO_INIT=${DB_AUTO_INIT:-true}
+      - JWT_SECRET=${JWT_SECRET}
       - OLLAMA_INTERNAL_URL=${OLLAMA_INTERNAL_URL:-http://ollama:11434}
       - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:1.5b}
       - OLLAMA_TIMEOUT=${OLLAMA_TIMEOUT:-180}
@@ -378,6 +421,46 @@ services:
         condition: service_healthy
       ollama:
         condition: service_healthy
+      storage:
+        condition: service_healthy
+      storage-migrate:
+        condition: service_completed_successfully
+    volumes:
+      - .:/app
+    networks:
+      - supabase_network
+
+  ml-trainer:
+    container_name: mlops-trainer
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+      args:
+        - SUPABASE_URL=${SUPABASE_URL}
+        - SUPABASE_KEY=${SUPABASE_ANON_KEY}
+    restart: "no"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL_INTERNAL:-http://kong:8000}
+      - SUPABASE_PUBLIC_URL=${SUPABASE_PUBLIC_URL}
+      - SUPABASE_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_STORAGE_URL_INTERNAL=${SUPABASE_STORAGE_URL_INTERNAL:-http://storage:5000}
+      - DB_CONNECTION_STRING=postgresql://supabase_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      - DB_AUTO_INIT=${DB_AUTO_INIT:-true}
+      - JWT_SECRET=${JWT_SECRET}
+      - ML_MODEL_NAME=${ML_MODEL_NAME:-quality_risk_classifier}
+      - ML_RISK_THRESHOLD=${ML_RISK_THRESHOLD:-0.5}
+      - ML_ARTIFACT_DIR=${ML_ARTIFACT_DIR:-artifacts/models}
+    command: ["python", "-m", "src.ml.train"]
+    depends_on:
+      db:
+        condition: service_healthy
+      etl:
+        condition: service_completed_successfully
+      storage:
+        condition: service_healthy
+      storage-migrate:
+        condition: service_completed_successfully
     volumes:
       - .:/app
     networks:
