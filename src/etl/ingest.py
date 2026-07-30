@@ -127,6 +127,37 @@ def generate_row_hash(row):
     return hashlib.sha256(dump.encode('utf-8')).hexdigest()
 
 
+def json_safe(value):
+    """Recursively convert pandas/numpy missing scalars to strict JSON nulls."""
+    if isinstance(value, dict):
+        return {str(key): json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(item) for item in value]
+    if isinstance(value, (datetime, pd.Timestamp)):
+        return value.isoformat()
+    try:
+        missing = pd.isna(value)
+    except (TypeError, ValueError):
+        missing = False
+    if isinstance(missing, bool) and missing:
+        return None
+    if hasattr(value, "item"):
+        try:
+            return value.item()
+        except (TypeError, ValueError):
+            pass
+    return value
+
+
+def strict_json_dumps(value) -> str:
+    """Serialize database JSON without non-standard NaN/Infinity tokens."""
+    return json.dumps(
+        json_safe(value),
+        ensure_ascii=False,
+        allow_nan=False,
+    )
+
+
 def start_step(step_name: str) -> dict:
     return {
         "step_name": step_name,
@@ -222,7 +253,7 @@ def should_skip_by_checksum(checksum: str):
             logger.info("File already ingested successfully. Skipping.")
             return True, res.file_id
         logger.info(f"File found with status {res.status}. Retrying/Updating.")
-        return False, None
+        return False, res.file_id
 
 
 def update_storage_metadata(file_id: str, storage_result: dict) -> None:
@@ -347,22 +378,51 @@ def run_pipeline(file_path):
     step_metrics.append(finish_step(step, row_count=len(df)))
 
     # 6. Insert File Record
-    file_id = str(uuid.uuid4())
+    file_id = str(existing_file_id or uuid.uuid4())
     step = start_step("insert_file_record")
     with get_db_session() as session:
-        session.execute(text("""
-            INSERT INTO raw_ingest.files (
-                file_id, file_name, checksum_sha256, rows_loaded, status, started_at, file_size_bytes
+        if existing_file_id:
+            session.execute(
+                text("DELETE FROM raw_ingest.stg_oferta WHERE file_id = :fid"),
+                {"fid": file_id},
             )
-            VALUES (:fid, :fname, :chk, :rows, 'running', :started_at, :file_size_bytes)
-        """), {
-            "fid": file_id,
-            "fname": file_path,
-            "chk": checksum,
-            "rows": len(df),
-            "started_at": start_time,
-            "file_size_bytes": file_size_bytes
-        })
+            session.execute(
+                text(
+                    """
+                    UPDATE raw_ingest.files
+                    SET file_name = :fname, rows_loaded = :rows,
+                        status = 'running', started_at = :started_at,
+                        finished_at = NULL, duration_seconds = NULL,
+                        file_size_bytes = :file_size_bytes, notes = NULL
+                    WHERE file_id = :fid
+                    """
+                ),
+                {
+                    "fid": file_id,
+                    "fname": file_path,
+                    "rows": len(df),
+                    "started_at": start_time,
+                    "file_size_bytes": file_size_bytes,
+                },
+            )
+        else:
+            session.execute(text("""
+                INSERT INTO raw_ingest.files (
+                    file_id, file_name, checksum_sha256, rows_loaded, status,
+                    started_at, file_size_bytes
+                )
+                VALUES (
+                    :fid, :fname, :chk, :rows, 'running', :started_at,
+                    :file_size_bytes
+                )
+            """), {
+                "fid": file_id,
+                "fname": file_path,
+                "chk": checksum,
+                "rows": len(df),
+                "started_at": start_time,
+                "file_size_bytes": file_size_bytes
+            })
     step_metrics.append(finish_step(step, row_count=len(df)))
 
     try:
@@ -373,7 +433,7 @@ def run_pipeline(file_path):
 
         # Prepare staging dataframe
         stg_df = df.copy()
-        stg_df['normalized_fields'] = stg_df.apply(lambda r: json.dumps({
+        stg_df['normalized_fields'] = stg_df.apply(lambda r: strict_json_dumps({
             'nombre_norm': r['nombre_norm'],
             'carrera_norm': r['carrera_norm'],
             'estado_norm': r['estado_norm'],

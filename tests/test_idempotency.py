@@ -43,3 +43,17 @@ def test_should_skip_by_checksum_updates_note(monkeypatch):
     assert file_id == "file-1"
     assert session.updated is True
     assert session.note
+
+
+def test_failed_checksum_is_reused_for_retry(monkeypatch):
+    row = SimpleNamespace(file_id="file-1", status="failed")
+    session = FakeSession(row)
+
+    @contextmanager
+    def fake_get_db_session():
+        yield session
+
+    monkeypatch.setattr(ingest, "get_db_session", fake_get_db_session)
+    should_skip, file_id = ingest.should_skip_by_checksum("checksum")
+    assert should_skip is False
+    assert file_id == "file-1"
