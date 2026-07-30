@@ -1,87 +1,125 @@
-# Informe de selección de hiperparámetros
+# Grouped hyperparameter selection report
 
-## Identificación
+## Experiment identity
 
-- `run_id`: `0f6f077d-9e12-4129-93bf-7048a7d15bdc`
-- Fecha UTC: `2026-07-30T14:03:19.082699+00:00`
-- Hash lógico del dataset: `ff6be902980c3c588c04cfdcf4fafe43637d1d649ed1c43aeb7f37f798830d1d`
-- Hash del archivo fuente: `fe366924ce44b577c74f72282b042ca7908aedf59445db00893b9a3b2d58848f`
-- Registros: 20045
-- Distribución de clases: `{"0": 15392, "1": 4653}`
-- Python: `3.14.5`
-- scikit-learn: `1.9.0`
-- Commit base de Git: `7f951f1860e4396cfe9eb7821b2d91db3220d117`; árbol sucio durante la ejecución: `False`
+- Run ID: `8c464366-c5ab-433a-abb0-380bad37683a`
+- UTC start: `2026-07-30T15:53:21.390522+00:00`
+- Git commit executed: `ba33dc1eb0f3f34c3d73c80694ddc75e23e3a60e`
+- Dirty worktree at start: `True`
+- Logical dataset SHA-256: `786449b2d7499f96e290d71f7cf5c33bcf0fb75a5964a8e6c587841880d03701`
+- Source SHA-256: `fe366924ce44b577c74f72282b042ca7908aedf59445db00893b9a3b2d58848f`
+- Rows/groups: 20045/18179
+- Training rows/groups: 16036/14544
+- Sealed-test rows/groups: 4009/3635
+- Train/test group overlap: 0
+- Actual row-level test fraction: 0.200000
+- Python/scikit-learn: 3.14.6/1.9.0
 
-## Metodología
+## Method
 
-Se reservó mediante muestreo estratificado el 20 % de las observaciones como conjunto de prueba y se utilizó el 80 % restante para entrenamiento. El test permaneció aislado durante toda la selección. Cada algoritmo se optimizó exclusivamente en entrenamiento mediante `RandomizedSearchCV`, con 40 combinaciones, `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)`, `scoring="average_precision"`, `refit=True` y `n_jobs=-1`.
+One `natural_key` group is assigned wholly to either training or test. The approximately 80/20 holdout is selected reproducibly from `StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)` candidates by minimizing the combined row-size and prevalence deviation. The sealed test is not used for feature-scenario choice, model selection, hyperparameter selection, categorical-encoding analysis, preprocessing, or threshold selection.
 
-La imputación, la codificación one-hot para Logistic Regression, la codificación ordinal para los modelos de árboles y el escalamiento exclusivo de Logistic Regression se ajustaron dentro de `Pipeline` y `ColumnTransformer` en cada pliegue. Ningún transformador fue ajustado antes de la validación cruzada. El ganador se determinó por el Average Precision promedio de CV; F1 promedio de CV se utilizó únicamente si el AP era exactamente igual. Las métricas del test no participaron en la selección.
+Within training, every `RandomizedSearchCV` uses five-fold `StratifiedGroupKFold`, 40 sampled configurations, `groups=natural_key` passed explicitly to `fit`, `scoring="average_precision"`, `refit=True`, and `n_jobs=-1`. Imputation, one-hot encoding, scaling where applicable, and classification remain inside `Pipeline`/`ColumnTransformer`. True OOF probabilities are generated with the same grouped folds; no training metric uses in-sample predictions.
 
-## Espacios, parámetros finales y resultados
+The primary scenario is `leakage_controlled`. It excludes deterministic label proxies and outputs of the same normalization/rule operations that construct `actual_label`: `{"canton_norm": "Output of the same territory-normalization process evaluated by missing_territory_norm and invalid_territory_pair.", "carrera_name_len": "A zero length is a direct proxy for missing program name.", "estado": "Used by the conflicting_estado rule; excluded to avoid learning a direct input to the label-generating consistency check.", "geo_method": "Direct diagnostic output of the territory-matching operation used by the territorial quality rules.", "geo_score_canton": "Direct confidence output of the canton normalization operation.", "geo_score_prov": "Direct confidence output of the province normalization operation.", "has_canton_norm": "Deterministically reproduces part of missing_territory_norm.", "has_nombre_carrera": "Deterministically reproduces the missing_nombre_carrera rule condition.", "has_nombre_ies": "Deterministically reproduces the missing_nombre_ies rule condition.", "has_provincia_norm": "Deterministically reproduces part of missing_territory_norm.", "ies_name_len": "A zero length is a direct proxy for missing institution name.", "natural_key_token_count": "Derived from the business key used by the duplicate rule and from fields participating in completeness checks.", "provincia_norm": "Output of the same territory-normalization process evaluated by missing_territory_norm and invalid_territory_pair."}`. The `full_feature` scenario is a sensitivity analysis of rule reproduction and must not be interpreted as independent discovery of data-quality defects.
 
-### LogisticRegression
+The primary model is selected by mean grouped-CV Average Precision, with grouped-OOF F1 at 0.5 only for an exact tie. A reference threshold of 0.5 is retained. The operational threshold is selected before test access by maximizing F2 over the predeclared OOF grid 0.05–0.95 in steps of 0.01.
 
-- Espacio de búsqueda: `[{"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [1.0], "model__max_iter": [500, 1000, 2000], "model__penalty": ["l1"], "model__solver": ["saga"]}, {"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [0.0], "model__max_iter": [500, 1000, 2000], "model__penalty": ["l2"], "model__solver": ["lbfgs", "liblinear", "saga"]}, {"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [0.1, 0.25, 0.5, 0.75, 0.9], "model__max_iter": [500, 1000, 2000], "model__penalty": ["elasticnet"], "model__solver": ["saga"]}]`
-- Parámetros finales: `{"model__C": 3.0, "model__class_weight": null, "model__l1_ratio": 0.0, "model__max_iter": 1000, "model__penalty": "l2", "model__solver": "liblinear"}`
-- Mejor Average Precision de CV: 0.846745
-- Desviación estándar de CV: 0.012465
-- F1 promedio de CV (solo desempate): 0.743507
-- Test: accuracy=0.886256, precision=0.785114, recall=0.702470, F1=0.741497, ROC AUC=0.940536, Average Precision=0.846498.
-- Matriz de confusión `[[TN, FP], [FN, TP]]`: `[[2899, 179], [277, 654]]`
-### GradientBoostingClassifier
+## Full model comparison
 
-- Espacio de búsqueda: `{"model__learning_rate": [0.01, 0.03, 0.05, 0.1, 0.2], "model__max_depth": [1, 2, 3, 4], "model__min_samples_leaf": [1, 2, 5, 10], "model__min_samples_split": [2, 5, 10, 20], "model__n_estimators": [50, 100, 150, 200, 300], "model__subsample": [0.6, 0.75, 0.9, 1.0]}`
-- Parámetros finales: `{"model__learning_rate": 0.2, "model__max_depth": 4, "model__min_samples_leaf": 10, "model__min_samples_split": 20, "model__n_estimators": 300, "model__subsample": 0.6}`
-- Mejor Average Precision de CV: 0.916566
-- Desviación estándar de CV: 0.004211
-- F1 promedio de CV (solo desempate): 0.823544
-- Test: accuracy=0.919681, precision=0.848000, recall=0.796992, F1=0.821705, ROC AUC=0.969153, Average Precision=0.916629.
-- Matriz de confusión `[[TN, FP], [FN, TP]]`: `[[2945, 133], [189, 742]]`
-### RandomForestClassifier
+| Scenario | Algorithm | CV AP mean | CV AP SD | CV F1 | Test AP | Test ROC AUC | Test F1 @0.5 | Status |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| leakage_controlled | LogisticRegression | 0.598698 | 0.012425 | 0.550263 | 0.630255 | 0.830285 | 0.575307 | rejected |
+| leakage_controlled | GradientBoostingClassifier | 0.627654 | 0.015247 | 0.558527 | 0.656070 | 0.847090 | 0.576206 | rejected |
+| leakage_controlled | RandomForestClassifier | 0.631359 | 0.013577 | 0.616500 | 0.655390 | 0.849264 | 0.631330 | selected |
+| full_feature | LogisticRegression | 0.841834 | 0.013937 | 0.739279 | 0.848508 | 0.941698 | 0.745320 | rejected |
+| full_feature | GradientBoostingClassifier | 0.905503 | 0.009882 | 0.810189 | 0.904379 | 0.964856 | 0.799318 | rejected |
+| full_feature | RandomForestClassifier | 0.915518 | 0.005057 | 0.825815 | 0.916634 | 0.970233 | 0.818641 | selected |
 
-- Espacio de búsqueda: `{"model__class_weight": [null, "balanced", "balanced_subsample"], "model__max_depth": [null, 5, 10, 20, 30], "model__max_features": ["sqrt", "log2", 0.5, null], "model__min_samples_leaf": [1, 2, 4, 8], "model__min_samples_split": [2, 5, 10, 20], "model__n_estimators": [100, 200, 300, 500]}`
-- Parámetros finales: `{"model__class_weight": "balanced", "model__max_depth": 30, "model__max_features": "log2", "model__min_samples_leaf": 1, "model__min_samples_split": 10, "model__n_estimators": 300}`
-- Mejor Average Precision de CV: 0.914684
-- Desviación estándar de CV: 0.005417
-- F1 promedio de CV (solo desempate): 0.813988
-- Test: accuracy=0.904465, precision=0.739930, recall=0.907626, F1=0.815244, ROC AUC=0.969446, Average Precision=0.917905.
-- Matriz de confusión `[[TN, FP], [FN, TP]]`: `[[2781, 297], [86, 845]]`
+## Scenario comparison
 
-## Comparación
+| Scenario | Role | Winner | CV AP mean ± SD | Test AP | Test F1 @0.5 | Operational threshold | Operational F1 |
+|---|---|---|---:|---:|---:|---:|---:|
+| leakage_controlled | primary | RandomForestClassifier | 0.631359 ± 0.013577 | 0.655390 | 0.631330 | 0.36 | 0.558623 |
+| full_feature | sensitivity | RandomForestClassifier | 0.915518 ± 0.005057 | 0.916634 | 0.818641 | 0.20 | 0.792539 |
 
-| Algorithm | CV AP mean | CV AP SD | CV F1 mean | Test AP | Test F1 | Status |
-|---|---:|---:|---:|---:|---:|---|
-| LogisticRegression | 0.846745 | 0.012465 | 0.743507 | 0.846498 | 0.741497 | rejected |
-| GradientBoostingClassifier | 0.916566 | 0.004211 | 0.823544 | 0.916629 | 0.821705 | selected |
-| RandomForestClassifier | 0.914684 | 0.005417 | 0.813988 | 0.917905 | 0.815244 | rejected |
+## Search spaces, final parameters, and metrics
 
-## Modelo seleccionado
+### leakage_controlled: LogisticRegression
 
-El modelo seleccionado fue **GradientBoostingClassifier**, con Average Precision de CV de **0.916566 ± 0.004211**. Esta elección se realizó antes de abrir las métricas del test y responde exclusivamente al criterio primario de validación cruzada. Su F1 promedio de CV fue 0.823544.
+- Categorical encoding: `onehot`
+- Search space: `[{"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [1.0], "model__max_iter": [500, 1000, 2000], "model__penalty": ["l1"], "model__solver": ["saga"]}, {"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [0.0], "model__max_iter": [500, 1000, 2000], "model__penalty": ["l2"], "model__solver": ["lbfgs", "liblinear", "saga"]}, {"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [0.1, 0.25, 0.5, 0.75, 0.9], "model__max_iter": [500, 1000, 2000], "model__penalty": ["elasticnet"], "model__solver": ["saga"]}]`
+- Final parameters: `{"model__C": 0.3, "model__class_weight": null, "model__l1_ratio": 1.0, "model__max_iter": 500, "model__penalty": "l1", "model__solver": "saga"}`
+- Grouped-CV Average Precision: 0.598698 ± 0.012425
+- Grouped-OOF F1 at 0.5: 0.550263 ± 0.021228
+- Mean fit time of the winning configuration: 1.970326 s
+- Sealed test at 0.5: accuracy=0.836119, precision=0.722403, recall=0.477981, F1=0.575307, ROC AUC=0.830285, Average Precision=0.630255, confusion matrix=[[2907, 171], [486, 445]].
+- Operational test metrics: Not applicable; an operational threshold is selected only for the scenario winner.
+### leakage_controlled: GradientBoostingClassifier
 
-## Diferencias frente a métricas publicadas
+- Categorical encoding: `onehot`
+- Search space: `{"model__learning_rate": [0.01, 0.03, 0.05, 0.1, 0.2], "model__max_depth": [1, 2, 3, 4], "model__min_samples_leaf": [1, 2, 5, 10], "model__min_samples_split": [2, 5, 10, 20], "model__n_estimators": [50, 100, 150, 200, 300], "model__subsample": [0.6, 0.75, 0.9, 1.0]}`
+- Final parameters: `{"model__learning_rate": 0.05, "model__max_depth": 4, "model__min_samples_leaf": 10, "model__min_samples_split": 2, "model__n_estimators": 200, "model__subsample": 0.6}`
+- Grouped-CV Average Precision: 0.627654 ± 0.015247
+- Grouped-OOF F1 at 0.5: 0.558527 ± 0.023346
+- Mean fit time of the winning configuration: 5.813118 s
+- Sealed test at 0.5: accuracy=0.835620, precision=0.717949, recall=0.481203, F1=0.576206, ROC AUC=0.847090, Average Precision=0.656070, confusion matrix=[[2902, 176], [483, 448]].
+- Operational test metrics: Not applicable; an operational threshold is selected only for the scenario winner.
+### leakage_controlled: RandomForestClassifier
 
-La versión anterior a esta revisión de `reports/article.md` no publicaba métricas ni parámetros de esta comparación ML; por ello no existía una cifra anterior verificable contra la cual calcular una diferencia numérica. La versión revisada incorpora estos primeros resultados trazables. Cualquier afirmación externa de que Random Forest era el ganador debe reemplazarse por Gradient Boosting.
+- Categorical encoding: `onehot`
+- Search space: `{"model__class_weight": [null, "balanced", "balanced_subsample"], "model__max_depth": [null, 5, 10, 20, 30], "model__max_features": ["sqrt", "log2", 0.5, null], "model__min_samples_leaf": [1, 2, 4, 8], "model__min_samples_split": [2, 5, 10, 20], "model__n_estimators": [100, 200, 300, 500]}`
+- Final parameters: `{"model__class_weight": "balanced_subsample", "model__max_depth": 10, "model__max_features": 0.5, "model__min_samples_leaf": 2, "model__min_samples_split": 2, "model__n_estimators": 300}`
+- Grouped-CV Average Precision: 0.631359 ± 0.013577
+- Grouped-OOF F1 at 0.5: 0.616500 ± 0.012880
+- Mean fit time of the winning configuration: 32.433031 s
+- Sealed test at 0.5: accuracy=0.805687, precision=0.564298, recall=0.716434, F1=0.631330, ROC AUC=0.849264, Average Precision=0.655390, confusion matrix=[[2563, 515], [264, 667]].
+- Operational test metrics: threshold=0.36, precision=0.419268, recall=0.836735, F1=0.558623, confusion matrix=[[1999, 1079], [152, 779]].
+### full_feature: LogisticRegression
 
-## Registro y artefactos
+- Categorical encoding: `onehot`
+- Search space: `[{"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [1.0], "model__max_iter": [500, 1000, 2000], "model__penalty": ["l1"], "model__solver": ["saga"]}, {"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [0.0], "model__max_iter": [500, 1000, 2000], "model__penalty": ["l2"], "model__solver": ["lbfgs", "liblinear", "saga"]}, {"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [0.1, 0.25, 0.5, 0.75, 0.9], "model__max_iter": [500, 1000, 2000], "model__penalty": ["elasticnet"], "model__solver": ["saga"]}]`
+- Final parameters: `{"model__C": 3.0, "model__class_weight": null, "model__l1_ratio": 0.0, "model__max_iter": 1000, "model__penalty": "l2", "model__solver": "liblinear"}`
+- Grouped-CV Average Precision: 0.841834 ± 0.013937
+- Grouped-OOF F1 at 0.5: 0.739279 ± 0.023811
+- Mean fit time of the winning configuration: 1.075261 s
+- Sealed test at 0.5: accuracy=0.888002, precision=0.789663, recall=0.705693, F1=0.745320, ROC AUC=0.941698, Average Precision=0.848508, confusion matrix=[[2903, 175], [274, 657]].
+- Operational test metrics: Not applicable; an operational threshold is selected only for the scenario winner.
+### full_feature: GradientBoostingClassifier
 
-La ejecución produce los tres mejores pipelines, el alias del modelo seleccionado, los `cv_results_` completos, espacios, métricas, matrices de confusión, puntos y figuras ROC/Precision–Recall, JSON de resultados y CSV comparativo. Cuando Supabase está disponible, `mlops.training_runs` conserva la ejecución y `mlops.model_candidates` conserva un registro por algoritmo con estado `selected` o `rejected`. Estado de persistencia de esta ejecución: `not_requested`.
+- Categorical encoding: `onehot`
+- Search space: `{"model__learning_rate": [0.01, 0.03, 0.05, 0.1, 0.2], "model__max_depth": [1, 2, 3, 4], "model__min_samples_leaf": [1, 2, 5, 10], "model__min_samples_split": [2, 5, 10, 20], "model__n_estimators": [50, 100, 150, 200, 300], "model__subsample": [0.6, 0.75, 0.9, 1.0]}`
+- Final parameters: `{"model__learning_rate": 0.2, "model__max_depth": 4, "model__min_samples_leaf": 10, "model__min_samples_split": 20, "model__n_estimators": 300, "model__subsample": 0.6}`
+- Grouped-CV Average Precision: 0.905503 ± 0.009882
+- Grouped-OOF F1 at 0.5: 0.810189 ± 0.012183
+- Mean fit time of the winning configuration: 21.426047 s
+- Sealed test at 0.5: accuracy=0.911948, precision=0.849034, recall=0.755102, F1=0.799318, ROC AUC=0.964856, Average Precision=0.904379, confusion matrix=[[2953, 125], [228, 703]].
+- Operational test metrics: Not applicable; an operational threshold is selected only for the scenario winner.
+### full_feature: RandomForestClassifier
 
-Directorio público de resultados: `reports/modeling/0f6f077d-9e12-4129-93bf-7048a7d15bdc`. Los binarios `.joblib` permanecen excluidos de Git y su ruta/hash se conserva en el manifiesto y registro.
+- Categorical encoding: `onehot`
+- Search space: `{"model__class_weight": [null, "balanced", "balanced_subsample"], "model__max_depth": [null, 5, 10, 20, 30], "model__max_features": ["sqrt", "log2", 0.5, null], "model__min_samples_leaf": [1, 2, 4, 8], "model__min_samples_split": [2, 5, 10, 20], "model__n_estimators": [100, 200, 300, 500]}`
+- Final parameters: `{"model__class_weight": null, "model__max_depth": 20, "model__max_features": 0.5, "model__min_samples_leaf": 2, "model__min_samples_split": 2, "model__n_estimators": 500}`
+- Grouped-CV Average Precision: 0.915518 ± 0.005057
+- Grouped-OOF F1 at 0.5: 0.825815 ± 0.010381
+- Mean fit time of the winning configuration: 81.983990 s
+- Sealed test at 0.5: accuracy=0.919431, precision=0.857647, recall=0.783029, F1=0.818641, ROC AUC=0.970233, Average Precision=0.916634, confusion matrix=[[2957, 121], [202, 729]].
+- Operational test metrics: threshold=0.20, precision=0.687451, recall=0.935553, F1=0.792539, confusion matrix=[[2682, 396], [60, 871]].
 
-## Limitaciones reproducibles
+## Primary result
 
-- La búsqueda y evaluación tardó 375.22 segundos, sin contar la reconstrucción del Excel. `n_jobs=-1` puede elevar el consumo de memoria; equipos limitados pueden usar `--n-jobs 1` manteniendo las 40 iteraciones.
-- La codificación ordinal de los modelos de árboles es una decisión de tractabilidad y sus códigos no representan orden sustantivo entre categorías.
-- scikit-learn 1.9.0 ejecuta el espacio solicitado de `penalty`, pero advierte que esa API será retirada en una versión futura. La versión está fijada para reproducir estos resultados; una migración exige repetir el experimento.
-- Esta ejecución local registra persistencia `not_requested` porque Supabase no estaba disponible. La migración, el esquema y la ruta de registro quedan preparados para la verificación de integración en un entorno con Supabase activo.
+The selected primary model is **RandomForestClassifier**, with grouped-CV Average Precision **0.631359 ± 0.013577**. At threshold 0.5, sealed-test Average Precision is 0.655390, ROC AUC is 0.849264, precision is 0.564298, recall is 0.716434, and F1 is 0.631330. The OOF-selected operational threshold is **0.36**, yielding sealed-test precision 0.419268, recall 0.836735, and F1 0.558623.
 
-## Cambios que debe recibir el artículo
+## Prediction provenance
 
-1. Sustituir la descripción de selección de modelos por la división 80/20 estratificada, RandomizedSearchCV de cinco pliegues y Average Precision como criterio primario.
-2. Incorporar la tabla comparativa de este informe y los parámetros finales de los tres algoritmos.
-3. Incorporar las tres figuras ROC y las tres figuras Precision–Recall generadas en `reports/modeling/0f6f077d-9e12-4129-93bf-7048a7d15bdc`; no reconstruirlas con cifras redondeadas.
-4. Indicar explícitamente que el test se utilizó una sola vez por configuración final y nunca para seleccionar modelo, variables o transformaciones.
-5. Referenciar el `run_id`, los CSV de `cv_results_`, el hash del dataset, el commit base y el repositorio público.
-6. Reemplazar cualquier afirmación externa de que Random Forest era el ganador por **GradientBoostingClassifier**, que es el resultado real de esta ejecución.
+Training probabilities are labeled `oof_train`; sealed holdout probabilities are labeled `sealed_test`; scores produced by the separately refitted full-data deployment artifact are labeled `production_inference` and are excluded from performance estimation. Counts: `{"oof_train": 16036, "production_inference": 20045, "sealed_test": 4009}`. Prediction evidence SHA-256: `2e1a6cd2c85b6f2d56eb9a3c46f62c84113df45dc1319821bb884989b9e1c124`.
+
+## Differences from the supplied manuscript PDF
+
+The PDF reports Random Forest, 4,650 positive rows (23.2%), accuracy 0.812, precision 0.644, recall 0.895, F1 0.749, ROC AUC 0.955, Average Precision 0.880, a predicted-positive rate of 32.3%, and an overfitting gap of 0.030. Those values do not originate from this grouped, leakage-controlled experiment and must not be retained as final results. The definitive values are the run-specific results above. The former row-stratified run is also superseded because duplicate `natural_key` groups could cross evaluation boundaries and training monitoring used in-sample probabilities.
+
+## Registry and limitations
+
+Persistence status: `success`. The registry separates three primary candidates from sensitivity-scenario evaluations and stores OOF/test/production origins. Storage status: `failed`.
+
+The target remains an operational proxy derived from deterministic audit rules rather than independently adjudicated ground truth. Grouped validation prevents duplicate-key leakage but does not establish external or temporal generalizability. The full-feature scenario measures rule reproduction. Automatic drift-triggered retraining is not implemented; monitoring remains human-supervised.

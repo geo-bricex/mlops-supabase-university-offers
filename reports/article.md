@@ -4,7 +4,7 @@ Author: [Your Name]
 Affiliation: [Your Institution]
 
 ## Abstract
-This work presents a reproducible data engineering pipeline for Ecuador academic offer data using the full Supabase stack, an incremental ETL process, and an interactive Streamlit dashboard. The pipeline ingests a public Excel file, normalizes categorical fields, loads data into a dimensional model, and tracks changes using SCD Type 2 semantics. Data quality checks and audit artifacts are produced for transparency, while operational monitoring and Storage-based artifact publishing improve traceability and reproducibility. A geospatial dashboard enables territorial coverage analysis by province and canton, quality monitoring, and ingestion timelines. Results from a 20,045 row dataset show 17,129 current offers with 3,706 within-file duplicates, 1,176 invalid territories, and 1,801 conflicting states, highlighting the value of automated quality controls in open data workflows.
+This work presents a reproducible data engineering pipeline for Ecuador academic offer data using the full Supabase stack, an incremental ETL process, and an interactive Streamlit dashboard. The pipeline ingests a public Excel file, normalizes categorical fields, loads data into a dimensional model, and tracks changes using SCD Type 2 semantics. Data quality checks and audit artifacts are produced for transparency, while operational monitoring and Storage-based artifact publishing improve traceability and reproducibility. A geospatial dashboard enables territorial coverage analysis by province and canton, quality monitoring, and ingestion timelines. Results from a 20,045-row dataset show 17,128 newly loaded offers, 3,706 within-file duplicates, 1,176 unresolved territories, and 1,801 conflicting-state groups, highlighting the value of automated quality controls in open data workflows.
 
 Keywords: data engineering, MLOps, Supabase, SCD Type 2, data quality, geospatial analytics, open data
 
@@ -78,15 +78,15 @@ Operational health is captured in `ops.service_health` using periodic checks aga
 Analytical access is provided via PostgREST views and SQL RPC functions (e.g., top provinces, ingestion time series). This approach exposes a typed HTTP interface without additional backend code, and aligns with the Supabase security model.
 
 ### 5.8 Quality-risk model selection
-The audited rows were split once into stratified training (80%) and test (20%) partitions with `random_state=42`. Hyperparameters for Logistic Regression, Gradient Boosting, and Random Forest were selected exclusively from training data using `RandomizedSearchCV` with 40 sampled configurations per algorithm, `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)`, `scoring="average_precision"`, `refit=True`, and parallel execution. Imputation, categorical encoding, and Logistic Regression scaling were fitted inside scikit-learn pipelines in every fold. The model family was selected by mean cross-validated Average Precision; cross-validated F1 was reserved only for an exact tie. The sealed test metrics were computed only after the winner had been fixed.
+The 18,179 distinct `natural_key` groups were split once into approximately 80% training and 20% test partitions using stratified group assignment with `random_state=42`; the resulting 16,036/4,009 row split had zero group overlap. Hyperparameters for Logistic Regression, Gradient Boosting, and Random Forest were selected exclusively from training data using `RandomizedSearchCV` with 40 sampled configurations per algorithm, five-fold `StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)`, `groups=natural_key`, `scoring="average_precision"`, `refit=True`, and parallel execution. The primary leakage-controlled scenario retained only pre-audit contextual predictors and excluded direct label-rule inputs, outputs, and deterministic proxies. A full-feature scenario was retained solely as a rule-reproduction sensitivity analysis. Imputation, sparse one-hot encoding, applicable scaling, and classification were fitted inside scikit-learn pipelines in every fold. The model family was selected by mean grouped cross-validated Average Precision; grouped OOF F1 was reserved only for an exact tie. True grouped OOF probabilities also determined the operational F2 threshold. The sealed test metrics were computed only after the feature scenario, candidate configurations, winner, and threshold had been fixed.
 
 ## 6. Results
 For the 2025 dataset, the pipeline produced the following metrics:
 - rows_loaded: 20,045
-- ingest_new: 17,129
+- ingest_new: 17,128
 - ingest_updated: 0
 - ingest_unchanged: 0
-- skipped_missing_dims: 1,050
+- skipped_missing_dims: 1,051
 - duplicates_in_file: 3,706
 - invalid_territory: 1,176
 - conflicting_estado: 1,801
@@ -94,7 +94,7 @@ For the 2025 dataset, the pipeline produced the following metrics:
 These results demonstrate that automated quality checks are essential for public data governance and for reliable downstream analytics.
 
 ### 6.1 Quality-risk classification
-Experiment `0f6f077d-9e12-4129-93bf-7048a7d15bdc` contained 20,045 observations (15,392 negative; 4,653 positive), divided into 16,036 training and 4,009 test observations. Gradient Boosting was selected with cross-validated Average Precision 0.916566 (SD 0.004211), ahead of Random Forest (0.914684, SD 0.005417) and Logistic Regression (0.846745, SD 0.012465). Its sealed-test results were accuracy 0.919681, precision 0.848000, recall 0.796992, F1 0.821705, ROC AUC 0.969153, and Average Precision 0.916629, with confusion matrix `[[2945, 133], [189, 742]]`. Although Random Forest obtained a slightly higher test Average Precision (0.917905), it was not selected because test metrics were excluded from model selection.
+Experiment `8c464366-c5ab-433a-abb0-380bad37683a` contained 20,045 observations (15,392 negative; 4,653 positive) and 18,179 groups. In the primary leakage-controlled scenario, Random Forest was selected with grouped-CV Average Precision 0.631359 (SD 0.013577), ahead of Gradient Boosting (0.627654, SD 0.015247) and Logistic Regression (0.598698, SD 0.012425). At the reference threshold of 0.5, its sealed-test results were accuracy 0.805687, precision 0.564298, recall 0.716434, F1 0.631330, ROC AUC 0.849264, and Average Precision 0.655390, with confusion matrix `[[2563, 515], [264, 667]]`. The operational threshold 0.36 was chosen only from grouped OOF training predictions by maximizing F2; on the sealed test it produced precision 0.419268, recall 0.836735, and F1 0.558623. The full-feature sensitivity scenario produced substantially higher values (selected-model grouped-CV AP 0.915518), confirming that direct audit-rule proxies make rule reproduction much easier and must not be reported as the primary predictive result.
 
 ## 7. Visualization and Analytics
 The Streamlit dashboard provides:
@@ -106,7 +106,7 @@ The Streamlit dashboard provides:
 - Monitoring views for service health, ETL success rate, and Storage artifacts.
 
 ## 8. Discussion and Limitations
-The pipeline surfaces significant inconsistencies that are otherwise invisible in static spreadsheets. The main limitations are the quality of the source data and the reliance on a reference territory catalog. Future work can refine fuzzy matching thresholds, add official codes, and incorporate additional cross-domain datasets.
+The pipeline surfaces significant inconsistencies that are otherwise invisible in static spreadsheets. The ML target is a deterministic audit-rule proxy rather than independently adjudicated ground truth; therefore the classifier measures prioritization of rule-defined risk, not an externally validated latent construct. Grouped validation prevents duplicate-key leakage but does not establish temporal or external generalizability. The full-feature analysis is sensitivity evidence only. Other limitations are the source-data quality and reliance on a reference territory catalog. Future work should add independent expert labels, temporal/external validation, refined matching thresholds, and official geographic codes.
 
 ## 9. Conclusion
 This project demonstrates a complete, reproducible pipeline that transforms open academic offer data into a governed analytical system with traceable history, data quality audits, and geospatial insights. The approach is portable to similar public datasets and supports transparent decision making.

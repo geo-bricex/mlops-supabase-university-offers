@@ -3,6 +3,7 @@
 __pycache__/
 *.pyc
 artifacts/
+*.joblib
 .pytest_cache/
 .ruff_cache/
 .coverage
@@ -10,6 +11,17 @@ htmlcov/
 
 # Docker volumes / local state
 docker/volumes/
+.docker-compose-storage-override.yml
 
 # Local paper workspace
 ARTICLE/
+docs/*.pdf
+
+# Runtime-generated experiment outputs
+# Published runs that are already tracked remain available; new UUID runs stay local
+# until they are deliberately selected as publication evidence.
+reports/modeling/*/
+reports/validation/
+reports/llm/
+reports/monitoring/
+reports/reproducibility/

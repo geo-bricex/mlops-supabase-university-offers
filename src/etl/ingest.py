@@ -10,7 +10,6 @@ import unicodedata
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 from sqlalchemy import text
@@ -21,12 +20,22 @@ from src.dq.checks import DataQualityChecker
 from src.geo.matching import GeoMatcher
 from src.storage.supabase_storage import upload_artifacts
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("etl_ingest")
 
 REQUIRED_COLUMNS = [
-    'NOMBRE_IES', 'TIPO_IES', 'TIPO_FINANCIAMIENTO', 'NOMBRE_CARRERA',
-    'CAMPO_AMPLIO', 'NIVEL_FORMACION', 'MODALIDAD', 'PROVINCIA', 'CANTON', 'ESTADO'
+    "NOMBRE_IES",
+    "TIPO_IES",
+    "TIPO_FINANCIAMIENTO",
+    "NOMBRE_CARRERA",
+    "CAMPO_AMPLIO",
+    "NIVEL_FORMACION",
+    "MODALIDAD",
+    "PROVINCIA",
+    "CANTON",
+    "ESTADO",
 ]
 
 
@@ -39,11 +48,11 @@ def compute_checksum(file_path):
 
 
 def normalize_column_name(col_name: str) -> str:
-    text = unicodedata.normalize('NFKD', str(col_name))
-    text = text.encode('ASCII', 'ignore').decode('utf-8')
+    text = unicodedata.normalize("NFKD", str(col_name))
+    text = text.encode("ASCII", "ignore").decode("utf-8")
     text = text.strip().upper()
-    text = re.sub(r'[^A-Z0-9]+', '_', text)
-    text = re.sub(r'_+', '_', text).strip('_')
+    text = re.sub(r"[^A-Z0-9]+", "_", text)
+    text = re.sub(r"_+", "_", text).strip("_")
     return text
 
 
@@ -58,7 +67,7 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns=normalized)
 
 
-def detect_header_row(df_raw: pd.DataFrame, max_scan: int = 50) -> Optional[int]:
+def detect_header_row(df_raw: pd.DataFrame, max_scan: int = 50) -> int | None:
     scan_limit = min(max_scan, len(df_raw))
     for idx in range(scan_limit):
         row_values = df_raw.iloc[idx].tolist()
@@ -89,30 +98,30 @@ def load_excel(file_path: str) -> pd.DataFrame:
 
 
 def normalize_value(matcher: GeoMatcher, value):
-    if pd.isna(value) or value == '':
+    if pd.isna(value) or value == "":
         return None
-    text_val = str(value).replace('\xa0', ' ').replace('\t', ' ')
+    text_val = str(value).replace("\xa0", " ").replace("\t", " ")
     return matcher.normalize_text(text_val)
 
 
 def safe_key_part(value) -> str:
     if value is None:
-        return ''
+        return ""
     if isinstance(value, float) and pd.isna(value):
-        return ''
+        return ""
     return str(value).strip()
 
 
 def generate_natural_key(row):
     # Deterministic concatenation using normalized fields.
     parts = [
-        safe_key_part(row.get('nombre_norm')),
-        safe_key_part(row.get('carrera_norm')),
-        safe_key_part(row.get('campo_amplio_norm')),
-        safe_key_part(row.get('nivel_formacion_norm')),
-        safe_key_part(row.get('modalidad_norm')),
-        safe_key_part(row.get('provincia_norm')),
-        safe_key_part(row.get('canton_norm'))
+        safe_key_part(row.get("nombre_norm")),
+        safe_key_part(row.get("carrera_norm")),
+        safe_key_part(row.get("campo_amplio_norm")),
+        safe_key_part(row.get("nivel_formacion_norm")),
+        safe_key_part(row.get("modalidad_norm")),
+        safe_key_part(row.get("provincia_norm")),
+        safe_key_part(row.get("canton_norm")),
     ]
     return "|".join(parts)
 
@@ -120,11 +129,11 @@ def generate_natural_key(row):
 def generate_row_hash(row):
     # Includes ESTADO and other normalized fields
     content = {
-        'natural_key': row['natural_key'],
-        'estado_norm': row.get('estado_norm') or '',
+        "natural_key": row["natural_key"],
+        "estado_norm": row.get("estado_norm") or "",
     }
     dump = json.dumps(content, sort_keys=True)
-    return hashlib.sha256(dump.encode('utf-8')).hexdigest()
+    return hashlib.sha256(dump.encode("utf-8")).hexdigest()
 
 
 def json_safe(value):
@@ -162,11 +171,13 @@ def start_step(step_name: str) -> dict:
     return {
         "step_name": step_name,
         "started_at": datetime.now(timezone.utc),
-        "_perf": time.perf_counter()
+        "_perf": time.perf_counter(),
     }
 
 
-def finish_step(step: dict, row_count: Optional[int] = None, detail: Optional[dict] = None) -> dict:
+def finish_step(
+    step: dict, row_count: int | None = None, detail: dict | None = None
+) -> dict:
     step["finished_at"] = datetime.now(timezone.utc)
     step["duration_seconds"] = round(time.perf_counter() - step.pop("_perf"), 6)
     if row_count is not None:
@@ -183,15 +194,17 @@ def write_step_metrics(file_id: str, steps: list) -> None:
     for step in steps:
         detail = step.get("detail")
         detail_json = json.dumps(detail) if detail is not None else None
-        payload.append({
-            "file_id": file_id,
-            "step_name": step.get("step_name"),
-            "started_at": step.get("started_at"),
-            "finished_at": step.get("finished_at"),
-            "duration_seconds": step.get("duration_seconds"),
-            "row_count": step.get("row_count"),
-            "detail": detail_json
-        })
+        payload.append(
+            {
+                "file_id": file_id,
+                "step_name": step.get("step_name"),
+                "started_at": step.get("started_at"),
+                "finished_at": step.get("finished_at"),
+                "duration_seconds": step.get("duration_seconds"),
+                "row_count": step.get("row_count"),
+                "detail": detail_json,
+            }
+        )
     with get_db_session() as session:
         session.execute(
             text(
@@ -199,11 +212,13 @@ def write_step_metrics(file_id: str, steps: list) -> None:
                 "(file_id, step_name, started_at, finished_at, duration_seconds, row_count, detail) "
                 "VALUES (:file_id, :step_name, :started_at, :finished_at, :duration_seconds, :row_count, CAST(:detail AS JSONB))"
             ),
-            payload
+            payload,
         )
 
 
-def build_process_metrics(df: Optional[pd.DataFrame], steps: list, extra: Optional[dict] = None) -> dict:
+def build_process_metrics(
+    df: pd.DataFrame | None, steps: list, extra: dict | None = None
+) -> dict:
     metrics = {"timings": {}}
     for step in steps:
         name = step.get("step_name")
@@ -213,23 +228,37 @@ def build_process_metrics(df: Optional[pd.DataFrame], steps: list, extra: Option
 
     if df is not None and not df.empty:
         metrics["rows"] = {
-            "total": int(len(df)),
-            "natural_keys": int(df["natural_key"].nunique()) if "natural_key" in df.columns else None
+            "total": len(df),
+            "natural_keys": int(df["natural_key"].nunique())
+            if "natural_key" in df.columns
+            else None,
         }
         metrics["unique"] = {}
         if "nombre_norm" in df.columns:
             metrics["unique"]["ies"] = int(df["nombre_norm"].nunique())
         if "provincia_norm" in df.columns and "canton_norm" in df.columns:
-            metrics["unique"]["territories"] = int(df[["provincia_norm", "canton_norm"]].drop_duplicates().shape[0])
-        if {"carrera_norm", "campo_amplio_norm", "nivel_formacion_norm", "modalidad_norm"}.issubset(df.columns):
+            metrics["unique"]["territories"] = int(
+                df[["provincia_norm", "canton_norm"]].drop_duplicates().shape[0]
+            )
+        if {
+            "carrera_norm",
+            "campo_amplio_norm",
+            "nivel_formacion_norm",
+            "modalidad_norm",
+        }.issubset(df.columns):
             metrics["unique"]["programs"] = int(
-                df[["carrera_norm", "campo_amplio_norm", "nivel_formacion_norm", "modalidad_norm"]]
+                df[
+                    [
+                        "carrera_norm",
+                        "campo_amplio_norm",
+                        "nivel_formacion_norm",
+                        "modalidad_norm",
+                    ]
+                ]
                 .drop_duplicates()
                 .shape[0]
             )
-        metrics["memory"] = {
-            "df_bytes": int(df.memory_usage(deep=True).sum())
-        }
+        metrics["memory"] = {"df_bytes": int(df.memory_usage(deep=True).sum())}
 
     if extra:
         metrics.update(extra)
@@ -239,16 +268,18 @@ def build_process_metrics(df: Optional[pd.DataFrame], steps: list, extra: Option
 def should_skip_by_checksum(checksum: str):
     with get_db_session() as session:
         res = session.execute(
-            text("SELECT file_id, status FROM raw_ingest.files WHERE checksum_sha256 = :c"),
-            {"c": checksum}
+            text(
+                "SELECT file_id, status FROM raw_ingest.files WHERE checksum_sha256 = :c"
+            ),
+            {"c": checksum},
         ).fetchone()
         if not res:
             return False, None
-        if res.status == 'success':
+        if res.status == "success":
             note = f"Duplicate checksum skipped at {datetime.now(timezone.utc).isoformat()}"
             session.execute(
                 text("UPDATE raw_ingest.files SET notes = :note WHERE file_id = :fid"),
-                {"note": note, "fid": res.file_id}
+                {"note": note, "fid": res.file_id},
             )
             logger.info("File already ingested successfully. Skipping.")
             return True, res.file_id
@@ -269,7 +300,9 @@ def update_storage_metadata(file_id: str, storage_result: dict) -> None:
         )
 
 
-def write_reports(dq: DataQualityChecker, output_dir: Path, file_id: str, file_path: str) -> None:
+def write_reports(
+    dq: DataQualityChecker, output_dir: Path, file_id: str, file_path: str
+) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     payload = {
@@ -277,15 +310,19 @@ def write_reports(dq: DataQualityChecker, output_dir: Path, file_id: str, file_p
         "file_path": file_path,
         "run_id": dq.run_id,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "metrics": dq.metrics
+        "metrics": dq.metrics,
     }
 
     json_path = output_dir / "data_quality.json"
-    json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    json_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     issues_df = pd.DataFrame(dq.issues)
     if not issues_df.empty and isinstance(issues_df.iloc[0].get("detail"), dict):
-        issues_df["detail"] = issues_df["detail"].apply(lambda d: json.dumps(d, ensure_ascii=False))
+        issues_df["detail"] = issues_df["detail"].apply(
+            lambda d: json.dumps(d, ensure_ascii=False)
+        )
     issues_csv = output_dir / "inconsistencies.csv"
     issues_df.to_csv(issues_csv, index=False)
 
@@ -304,7 +341,7 @@ def write_reports(dq: DataQualityChecker, output_dir: Path, file_id: str, file_p
         "<h2>Inconsistencies (preview)</h2>"
         f"{issues_preview.to_html(index=False, escape=False)}"
         "</body></html>",
-        encoding="utf-8"
+        encoding="utf-8",
     )
 
 
@@ -332,7 +369,9 @@ def run_pipeline(file_path):
     step_metrics.append(finish_step(step))
     if should_skip:
         if existing_file_id:
-            storage_result = upload_artifacts(existing_file_id, file_path, Path("reports"))
+            storage_result = upload_artifacts(
+                existing_file_id, file_path, Path("reports")
+            )
             update_storage_metadata(existing_file_id, storage_result)
         return
 
@@ -341,11 +380,13 @@ def run_pipeline(file_path):
         step = start_step("load_excel")
         df = load_excel(file_path)
         step_metrics.append(finish_step(step, row_count=len(df)))
+    # CLI boundary: preserve a concise exit code while logging any reader/backend
+    # exception raised by pandas or its optional Excel engine.
     except Exception as e:
-        logger.error(f"Failed to read Excel: {e}")
-        sys.exit(1)
+        logger.exception("Failed to read Excel")
+        raise SystemExit(1) from e
 
-    df = df.dropna(how='all', subset=REQUIRED_COLUMNS)
+    df = df.dropna(how="all", subset=REQUIRED_COLUMNS)
     rows_after_drop = len(df)
     logger.info(f"Loaded {len(df)} rows.")
 
@@ -353,28 +394,44 @@ def run_pipeline(file_path):
     matcher = GeoMatcher()  # Loads catalog
 
     step = start_step("normalize_fields")
-    df['nombre_norm'] = df['NOMBRE_IES'].apply(lambda v: normalize_value(matcher, v))
-    df['carrera_norm'] = df['NOMBRE_CARRERA'].apply(lambda v: normalize_value(matcher, v))
-    df['estado_norm'] = df['ESTADO'].apply(lambda v: normalize_value(matcher, v))
-    df['campo_amplio_norm'] = df['CAMPO_AMPLIO'].apply(lambda v: normalize_value(matcher, v))
-    df['nivel_formacion_norm'] = df['NIVEL_FORMACION'].apply(lambda v: normalize_value(matcher, v))
-    df['modalidad_norm'] = df['MODALIDAD'].apply(lambda v: normalize_value(matcher, v))
+    df["nombre_norm"] = df["NOMBRE_IES"].apply(lambda v: normalize_value(matcher, v))
+    df["carrera_norm"] = df["NOMBRE_CARRERA"].apply(
+        lambda v: normalize_value(matcher, v)
+    )
+    df["estado_norm"] = df["ESTADO"].apply(lambda v: normalize_value(matcher, v))
+    df["campo_amplio_norm"] = df["CAMPO_AMPLIO"].apply(
+        lambda v: normalize_value(matcher, v)
+    )
+    df["nivel_formacion_norm"] = df["NIVEL_FORMACION"].apply(
+        lambda v: normalize_value(matcher, v)
+    )
+    df["modalidad_norm"] = df["MODALIDAD"].apply(lambda v: normalize_value(matcher, v))
     step_metrics.append(finish_step(step, row_count=len(df)))
 
     # Geo Matching
     def match_row(row):
-        p, c, score_p, score_c, method = matcher.match_territory(row['PROVINCIA'], row['CANTON'])
+        p, c, score_p, score_c, method = matcher.match_territory(
+            row["PROVINCIA"], row["CANTON"]
+        )
         return pd.Series([p, c, score_p, score_c, method])
 
     step = start_step("geo_match")
-    df[['provincia_norm', 'canton_norm', 'geo_score_prov', 'geo_score_canton', 'geo_method']] = df.apply(match_row, axis=1)
+    df[
+        [
+            "provincia_norm",
+            "canton_norm",
+            "geo_score_prov",
+            "geo_score_canton",
+            "geo_method",
+        ]
+    ] = df.apply(match_row, axis=1)
     step_metrics.append(finish_step(step, row_count=len(df)))
 
     # 5. Keys
     step = start_step("keys_hash")
-    df['natural_key'] = df.apply(generate_natural_key, axis=1)
-    df['row_hash'] = df.apply(generate_row_hash, axis=1)
-    df['row_num'] = df.index + 1
+    df["natural_key"] = df.apply(generate_natural_key, axis=1)
+    df["row_hash"] = df.apply(generate_row_hash, axis=1)
+    df["row_num"] = df.index + 1
     step_metrics.append(finish_step(step, row_count=len(df)))
 
     # 6. Insert File Record
@@ -406,7 +463,8 @@ def run_pipeline(file_path):
                 },
             )
         else:
-            session.execute(text("""
+            session.execute(
+                text("""
                 INSERT INTO raw_ingest.files (
                     file_id, file_name, checksum_sha256, rows_loaded, status,
                     started_at, file_size_bytes
@@ -415,58 +473,73 @@ def run_pipeline(file_path):
                     :fid, :fname, :chk, :rows, 'running', :started_at,
                     :file_size_bytes
                 )
-            """), {
-                "fid": file_id,
-                "fname": file_path,
-                "chk": checksum,
-                "rows": len(df),
-                "started_at": start_time,
-                "file_size_bytes": file_size_bytes
-            })
+            """),
+                {
+                    "fid": file_id,
+                    "fname": file_path,
+                    "chk": checksum,
+                    "rows": len(df),
+                    "started_at": start_time,
+                    "file_size_bytes": file_size_bytes,
+                },
+            )
     step_metrics.append(finish_step(step, row_count=len(df)))
 
     try:
         # 7. Loading Staging (Bulk)
         # We need to serialize JSONB fields
-        df['file_id'] = file_id
-        df['ingested_at'] = datetime.now(timezone.utc)
+        df["file_id"] = file_id
+        df["ingested_at"] = datetime.now(timezone.utc)
 
         # Prepare staging dataframe
         stg_df = df.copy()
-        stg_df['normalized_fields'] = stg_df.apply(lambda r: strict_json_dumps({
-            'nombre_norm': r['nombre_norm'],
-            'carrera_norm': r['carrera_norm'],
-            'estado_norm': r['estado_norm'],
-            'campo_amplio_norm': r['campo_amplio_norm'],
-            'nivel_formacion_norm': r['nivel_formacion_norm'],
-            'modalidad_norm': r['modalidad_norm'],
-            'provincia_norm': r['provincia_norm'],
-            'canton_norm': r['canton_norm'],
-            'geo_method': r['geo_method'],
-            'geo_score_prov': r['geo_score_prov'],
-            'geo_score_canton': r['geo_score_canton']
-        }), axis=1)
+        stg_df["normalized_fields"] = stg_df.apply(
+            lambda r: strict_json_dumps(
+                {
+                    "nombre_norm": r["nombre_norm"],
+                    "carrera_norm": r["carrera_norm"],
+                    "estado_norm": r["estado_norm"],
+                    "campo_amplio_norm": r["campo_amplio_norm"],
+                    "nivel_formacion_norm": r["nivel_formacion_norm"],
+                    "modalidad_norm": r["modalidad_norm"],
+                    "provincia_norm": r["provincia_norm"],
+                    "canton_norm": r["canton_norm"],
+                    "geo_method": r["geo_method"],
+                    "geo_score_prov": r["geo_score_prov"],
+                    "geo_score_canton": r["geo_score_canton"],
+                }
+            ),
+            axis=1,
+        )
 
         # Map columns to DB columns
         db_cols = {
-            'NOMBRE_IES': 'nombre_ies',
-            'TIPO_IES': 'tipo_ies',
-            'TIPO_FINANCIAMIENTO': 'tipo_financiamiento',
-            'NOMBRE_CARRERA': 'nombre_carrera',
-            'CAMPO_AMPLIO': 'campo_amplio',
-            'NIVEL_FORMACION': 'nivel_formacion',
-            'MODALIDAD': 'modalidad',
-            'PROVINCIA': 'provincia',
-            'CANTON': 'canton',
-            'ESTADO': 'estado',
-            'row_num': 'row_num'
+            "NOMBRE_IES": "nombre_ies",
+            "TIPO_IES": "tipo_ies",
+            "TIPO_FINANCIAMIENTO": "tipo_financiamiento",
+            "NOMBRE_CARRERA": "nombre_carrera",
+            "CAMPO_AMPLIO": "campo_amplio",
+            "NIVEL_FORMACION": "nivel_formacion",
+            "MODALIDAD": "modalidad",
+            "PROVINCIA": "provincia",
+            "CANTON": "canton",
+            "ESTADO": "estado",
+            "row_num": "row_num",
         }
         stg_df = stg_df.rename(columns=db_cols)
 
         # Select valid columns for insert
-        insert_cols = list(db_cols.values()) + ['file_id', 'ingested_at', 'normalized_fields', 'natural_key', 'row_hash']
+        insert_cols = list(db_cols.values()) + [
+            "file_id",
+            "ingested_at",
+            "normalized_fields",
+            "natural_key",
+            "row_hash",
+        ]
         step = start_step("load_staging")
-        stg_df[insert_cols].to_sql('stg_oferta', engine, schema='raw_ingest', if_exists='append', index=False)
+        stg_df[insert_cols].to_sql(
+            "stg_oferta", engine, schema="raw_ingest", if_exists="append", index=False
+        )
         step_metrics.append(finish_step(step, row_count=len(stg_df)))
         logger.info("Staging load complete.")
 
@@ -474,51 +547,87 @@ def run_pipeline(file_path):
             # 8. Upsert Dims
             # Dim IES
             step = start_step("upsert_dims")
-            ies_unique = df[['NOMBRE_IES', 'nombre_norm', 'TIPO_IES', 'TIPO_FINANCIAMIENTO']].drop_duplicates('nombre_norm')
+            ies_unique = df[
+                ["NOMBRE_IES", "nombre_norm", "TIPO_IES", "TIPO_FINANCIAMIENTO"]
+            ].drop_duplicates("nombre_norm")
             for _, row in ies_unique.iterrows():
-                session.execute(text("""
+                session.execute(
+                    text("""
                     INSERT INTO core.dim_ies (nombre_original, nombre_norm, tipo_ies, tipo_financiamiento)
                     VALUES (:orig, :norm, :ti, :tf)
                     ON CONFLICT (nombre_norm) DO UPDATE
                     SET updated_at = NOW(), tipo_ies = EXCLUDED.tipo_ies, tipo_financiamiento = EXCLUDED.tipo_financiamiento
-                """), {"orig": row['NOMBRE_IES'], "norm": row['nombre_norm'], "ti": row['TIPO_IES'], "tf": row['TIPO_FINANCIAMIENTO']})
+                """),
+                    {
+                        "orig": row["NOMBRE_IES"],
+                        "norm": row["nombre_norm"],
+                        "ti": row["TIPO_IES"],
+                        "tf": row["TIPO_FINANCIAMIENTO"],
+                    },
+                )
 
             # Dim Territory
-            geo_unique = df[['PROVINCIA', 'CANTON', 'provincia_norm', 'canton_norm']].drop_duplicates(['provincia_norm', 'canton_norm'])
+            geo_unique = df[
+                ["PROVINCIA", "CANTON", "provincia_norm", "canton_norm"]
+            ].drop_duplicates(["provincia_norm", "canton_norm"])
             for _, row in geo_unique.iterrows():
-                if row['provincia_norm'] and row['canton_norm']:
-                    session.execute(text("""
+                if row["provincia_norm"] and row["canton_norm"]:
+                    session.execute(
+                        text("""
                         INSERT INTO core.dim_territory (provincia_original, canton_original, provincia_norm, canton_norm)
                         VALUES (:po, :co, :pn, :cn)
                         ON CONFLICT (provincia_norm, canton_norm) DO NOTHING
-                    """), {"po": row['PROVINCIA'], "co": row['CANTON'], "pn": row['provincia_norm'], "cn": row['canton_norm']})
+                    """),
+                        {
+                            "po": row["PROVINCIA"],
+                            "co": row["CANTON"],
+                            "pn": row["provincia_norm"],
+                            "cn": row["canton_norm"],
+                        },
+                    )
 
             # Dim Program
-            prog_unique = df[['NOMBRE_CARRERA', 'carrera_norm', 'campo_amplio_norm', 'nivel_formacion_norm', 'modalidad_norm']].drop_duplicates(
-                ['carrera_norm', 'campo_amplio_norm', 'nivel_formacion_norm', 'modalidad_norm']
+            prog_unique = df[
+                [
+                    "NOMBRE_CARRERA",
+                    "carrera_norm",
+                    "campo_amplio_norm",
+                    "nivel_formacion_norm",
+                    "modalidad_norm",
+                ]
+            ].drop_duplicates(
+                [
+                    "carrera_norm",
+                    "campo_amplio_norm",
+                    "nivel_formacion_norm",
+                    "modalidad_norm",
+                ]
             )
             for _, row in prog_unique.iterrows():
-                session.execute(text("""
+                session.execute(
+                    text("""
                     INSERT INTO core.dim_program (carrera_original, carrera_norm, campo_amplio, nivel_formacion, modalidad)
                     VALUES (:co, :cn, :ca, :nf, :mo)
                     ON CONFLICT (carrera_norm, campo_amplio, nivel_formacion, modalidad) DO NOTHING
-                """), {
-                    "co": row['NOMBRE_CARRERA'],
-                    "cn": row['carrera_norm'],
-                    "ca": row['campo_amplio_norm'],
-                    "nf": row['nivel_formacion_norm'],
-                    "mo": row['modalidad_norm']
-                })
+                """),
+                    {
+                        "co": row["NOMBRE_CARRERA"],
+                        "cn": row["carrera_norm"],
+                        "ca": row["campo_amplio_norm"],
+                        "nf": row["nivel_formacion_norm"],
+                        "mo": row["modalidad_norm"],
+                    },
+                )
 
             step_metrics.append(
                 finish_step(
                     step,
                     row_count=int(len(ies_unique) + len(geo_unique) + len(prog_unique)),
                     detail={
-                        "ies": int(len(ies_unique)),
-                        "territories": int(len(geo_unique)),
-                        "programs": int(len(prog_unique))
-                    }
+                        "ies": len(ies_unique),
+                        "territories": len(geo_unique),
+                        "programs": len(prog_unique),
+                    },
                 )
             )
             logger.info("Dimension upsert complete.")
@@ -526,36 +635,64 @@ def run_pipeline(file_path):
             # 9. SCD Type 2 for Fact Offer
             step = start_step("scd_fact")
             existing_rows = session.execute(
-                text("SELECT natural_key, row_hash FROM core.fact_offer WHERE is_current = TRUE")
+                text(
+                    "SELECT natural_key, row_hash FROM core.fact_offer WHERE is_current = TRUE"
+                )
             ).fetchall()
             existing_map = {r.natural_key: r.row_hash for r in existing_rows}
 
             # Prepare lookups for IDs
-            ies_lookup = {r.nombre_norm: r.ies_id for r in session.execute(text("SELECT nombre_norm, ies_id FROM core.dim_ies")).fetchall()}
-            terr_lookup_rows = session.execute(text("SELECT provincia_norm, canton_norm, territory_id FROM core.dim_territory")).fetchall()
-            terr_lookup = {(r.provincia_norm, r.canton_norm): r.territory_id for r in terr_lookup_rows}
-            prog_lookup_rows = session.execute(text("SELECT carrera_norm, campo_amplio, nivel_formacion, modalidad, program_id FROM core.dim_program")).fetchall()
-            prog_lookup = {(r.carrera_norm, r.campo_amplio, r.nivel_formacion, r.modalidad): r.program_id for r in prog_lookup_rows}
+            ies_lookup = {
+                r.nombre_norm: r.ies_id
+                for r in session.execute(
+                    text("SELECT nombre_norm, ies_id FROM core.dim_ies")
+                ).fetchall()
+            }
+            terr_lookup_rows = session.execute(
+                text(
+                    "SELECT provincia_norm, canton_norm, territory_id FROM core.dim_territory"
+                )
+            ).fetchall()
+            terr_lookup = {
+                (r.provincia_norm, r.canton_norm): r.territory_id
+                for r in terr_lookup_rows
+            }
+            prog_lookup_rows = session.execute(
+                text(
+                    "SELECT carrera_norm, campo_amplio, nivel_formacion, modalidad, program_id FROM core.dim_program"
+                )
+            ).fetchall()
+            prog_lookup = {
+                (
+                    r.carrera_norm,
+                    r.campo_amplio,
+                    r.nivel_formacion,
+                    r.modalidad,
+                ): r.program_id
+                for r in prog_lookup_rows
+            }
 
             updates_count = 0
             inserts_count = 0
             unchanged_count = 0
             skipped_missing_dims = 0
 
-            df_fact = df.drop_duplicates(subset=['natural_key'], keep='last')
+            df_fact = df.drop_duplicates(subset=["natural_key"], keep="last")
             for _, row in df_fact.iterrows():
-                nk = row['natural_key']
-                rh = row['row_hash']
+                nk = row["natural_key"]
+                rh = row["row_hash"]
 
                 # Resolve IDs
-                ies_id = ies_lookup.get(row['nombre_norm'])
-                terr_id = terr_lookup.get((row['provincia_norm'], row['canton_norm']))
-                prog_id = prog_lookup.get((
-                    row['carrera_norm'],
-                    row['campo_amplio_norm'],
-                    row['nivel_formacion_norm'],
-                    row['modalidad_norm']
-                ))
+                ies_id = ies_lookup.get(row["nombre_norm"])
+                terr_id = terr_lookup.get((row["provincia_norm"], row["canton_norm"]))
+                prog_id = prog_lookup.get(
+                    (
+                        row["carrera_norm"],
+                        row["campo_amplio_norm"],
+                        row["nivel_formacion_norm"],
+                        row["modalidad_norm"],
+                    )
+                )
 
                 if not (ies_id and terr_id and prog_id):
                     skipped_missing_dims += 1
@@ -569,17 +706,25 @@ def run_pipeline(file_path):
                                 "UPDATE core.fact_offer SET is_current = FALSE, last_seen_at = NOW(), last_file_id = :fid "
                                 "WHERE natural_key = :nk AND is_current = TRUE"
                             ),
-                            {"fid": file_id, "nk": nk}
+                            {"fid": file_id, "nk": nk},
                         )
 
-                        session.execute(text("""
+                        session.execute(
+                            text("""
                             INSERT INTO core.fact_offer (ies_id, territory_id, program_id, estado_original, estado_norm, natural_key, row_hash, last_file_id, is_current)
                             VALUES (:ies, :terr, :prog, :eo, :en, :nk, :rh, :fid, TRUE)
-                        """), {
-                            "ies": ies_id, "terr": terr_id, "prog": prog_id,
-                            "eo": row['ESTADO'], "en": row['estado_norm'],
-                            "nk": nk, "rh": rh, "fid": file_id
-                        })
+                        """),
+                            {
+                                "ies": ies_id,
+                                "terr": terr_id,
+                                "prog": prog_id,
+                                "eo": row["ESTADO"],
+                                "en": row["estado_norm"],
+                                "nk": nk,
+                                "rh": rh,
+                                "fid": file_id,
+                            },
+                        )
                         updates_count += 1
                     else:
                         # UNCHANGED: Update last_seen
@@ -588,32 +733,42 @@ def run_pipeline(file_path):
                                 "UPDATE core.fact_offer SET last_seen_at = NOW(), last_file_id = :fid "
                                 "WHERE natural_key = :nk AND is_current = TRUE"
                             ),
-                            {"fid": file_id, "nk": nk}
+                            {"fid": file_id, "nk": nk},
                         )
                         unchanged_count += 1
                 else:
                     # NEW
-                    session.execute(text("""
+                    session.execute(
+                        text("""
                         INSERT INTO core.fact_offer (ies_id, territory_id, program_id, estado_original, estado_norm, natural_key, row_hash, last_file_id, is_current)
                         VALUES (:ies, :terr, :prog, :eo, :en, :nk, :rh, :fid, TRUE)
-                    """), {
-                        "ies": ies_id, "terr": terr_id, "prog": prog_id,
-                        "eo": row['ESTADO'], "en": row['estado_norm'],
-                        "nk": nk, "rh": rh, "fid": file_id
-                    })
+                    """),
+                        {
+                            "ies": ies_id,
+                            "terr": terr_id,
+                            "prog": prog_id,
+                            "eo": row["ESTADO"],
+                            "en": row["estado_norm"],
+                            "nk": nk,
+                            "rh": rh,
+                            "fid": file_id,
+                        },
+                    )
                     inserts_count += 1
 
-            logger.info(f"SCD Logic: {inserts_count} new, {updates_count} updates, {unchanged_count} unchanged.")
+            logger.info(
+                f"SCD Logic: {inserts_count} new, {updates_count} updates, {unchanged_count} unchanged."
+            )
             step_metrics.append(
                 finish_step(
                     step,
-                    row_count=int(len(df_fact)),
+                    row_count=len(df_fact),
                     detail={
                         "new": inserts_count,
                         "updated": updates_count,
                         "unchanged": unchanged_count,
-                        "skipped_missing_dims": skipped_missing_dims
-                    }
+                        "skipped_missing_dims": skipped_missing_dims,
+                    },
                 )
             )
 
@@ -623,12 +778,16 @@ def run_pipeline(file_path):
             "ingest_new": inserts_count,
             "ingest_updated": updates_count,
             "ingest_unchanged": unchanged_count,
-            "skipped_missing_dims": skipped_missing_dims
+            "skipped_missing_dims": skipped_missing_dims,
         }
         step = start_step("data_quality")
-        dq = DataQualityChecker(file_id, valid_pairs=matcher.valid_pairs, extra_metrics=extra_metrics)
+        dq = DataQualityChecker(
+            file_id, valid_pairs=matcher.valid_pairs, extra_metrics=extra_metrics
+        )
         dq.run_checks(df)
-        step_metrics.append(finish_step(step, row_count=len(df), detail={"issues": len(dq.issues)}))
+        step_metrics.append(
+            finish_step(step, row_count=len(df), detail={"issues": len(dq.issues)})
+        )
 
         reports_dir = Path("reports")
         step = start_step("write_reports")
@@ -642,8 +801,8 @@ def run_pipeline(file_path):
                 step,
                 detail={
                     "status": storage_result.get("status"),
-                    "paths": list((storage_result.get("paths") or {}).keys())
-                }
+                    "paths": list((storage_result.get("paths") or {}).keys()),
+                },
             )
         )
 
@@ -653,9 +812,7 @@ def run_pipeline(file_path):
             f"skipped_missing_dims={skipped_missing_dims}"
         )
         process_metrics = build_process_metrics(
-            df,
-            step_metrics,
-            extra={"rows_after_drop": rows_after_drop}
+            df, step_metrics, extra={"rows_after_drop": rows_after_drop}
         )
         write_step_metrics(file_id, step_metrics)
         finished_at = datetime.now(timezone.utc)
@@ -682,20 +839,22 @@ def run_pipeline(file_path):
                     "skipped_missing_dims": skipped_missing_dims,
                     "storage_status": storage_result.get("status"),
                     "storage_paths": json.dumps(storage_result.get("paths") or {}),
-                    "process_metrics": json.dumps(process_metrics)
-                }
+                    "process_metrics": json.dumps(process_metrics),
+                },
             )
 
         logger.info("Pipeline finished successfully.")
         logger.info(f"Summary: {summary}")
 
+    # Top-level transactional boundary: record every failure type in the run
+    # registry before re-raising it to the container runtime.
     except Exception as e:
-        logger.error(f"Pipeline failed: {e}")
+        logger.exception("Pipeline failed")
         if file_id:
             process_metrics = build_process_metrics(
                 df,
                 step_metrics,
-                extra={"rows_after_drop": rows_after_drop, "error": str(e)}
+                extra={"rows_after_drop": rows_after_drop, "error": str(e)},
             )
             write_step_metrics(file_id, step_metrics)
             finished_at = datetime.now(timezone.utc)
@@ -714,8 +873,8 @@ def run_pipeline(file_path):
                         "finished_at": finished_at,
                         "duration_seconds": duration_seconds,
                         "storage_status": "failed",
-                        "process_metrics": json.dumps(process_metrics)
-                    }
+                        "process_metrics": json.dumps(process_metrics),
+                    },
                 )
         sys.exit(1)
 

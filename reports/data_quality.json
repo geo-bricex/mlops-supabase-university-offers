@@ -1,19 +1,61 @@
 {
-  "file_id": "c7aab7cd-37cd-4c02-8602-c96da17204d0",
+  "file_id": "e19d5e97-ebb1-4d05-b534-b4a99bf72bdd",
   "file_path": "data/oferta-academica2025.xlsx",
-  "run_id": "cc210e03-129a-49f7-aad7-7f79a3171a91",
-  "generated_at": "2026-05-28T16:36:17.672524+00:00",
+  "run_id": "62623a2f-10c2-4d2c-8d02-54c4c02c8118",
+  "generated_at": "2026-07-30T15:52:45.703461+00:00",
   "metrics": {
     "rows_loaded": 20045,
-    "ingest_new": 17129,
+    "ingest_new": 17128,
     "ingest_updated": 0,
     "ingest_unchanged": 0,
-    "skipped_missing_dims": 1050,
+    "skipped_missing_dims": 1051,
     "duplicates_in_file": 3706,
     "invalid_territory": 1176,
     "invalid_territory_pair": 0,
     "conflicting_estado": 1801,
     "missing_NOMBRE_IES": 1,
-    "missing_NOMBRE_CARRERA": 0
+    "missing_NOMBRE_CARRERA": 0,
+    "rows_evaluated": 20045,
+    "audit_events_total": 6684,
+    "label_positive_groups": 2787,
+    "label_positive_rows": 4653,
+    "rule_counts": {
+      "DQ-001": {
+        "event_count": 3706,
+        "affected_row_count": 3706,
+        "affected_group_count": 1840,
+        "label_positive_row_count": 3706
+      },
+      "DQ-002": {
+        "event_count": 1176,
+        "affected_row_count": 1176,
+        "affected_group_count": 1050,
+        "label_positive_row_count": 1176
+      },
+      "DQ-003": {
+        "event_count": 0,
+        "affected_row_count": 0,
+        "affected_group_count": 0,
+        "label_positive_row_count": 0
+      },
+      "DQ-004": {
+        "event_count": 1801,
+        "affected_row_count": 3617,
+        "affected_group_count": 1801,
+        "label_positive_row_count": 3617
+      },
+      "DQ-005": {
+        "event_count": 1,
+        "affected_row_count": 1,
+        "affected_group_count": 1,
+        "label_positive_row_count": 1
+      },
+      "DQ-006": {
+        "event_count": 0,
+        "affected_row_count": 0,
+        "affected_group_count": 0,
+        "label_positive_row_count": 0
+      }
+    }
   }
 }

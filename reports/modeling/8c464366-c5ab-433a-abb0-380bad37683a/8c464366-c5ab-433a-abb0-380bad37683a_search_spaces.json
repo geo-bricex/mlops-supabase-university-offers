@@ -1,0 +1,187 @@
+{
+  "GradientBoostingClassifier": {
+    "model__learning_rate": [
+      0.01,
+      0.03,
+      0.05,
+      0.1,
+      0.2
+    ],
+    "model__max_depth": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "model__min_samples_leaf": [
+      1,
+      2,
+      5,
+      10
+    ],
+    "model__min_samples_split": [
+      2,
+      5,
+      10,
+      20
+    ],
+    "model__n_estimators": [
+      50,
+      100,
+      150,
+      200,
+      300
+    ],
+    "model__subsample": [
+      0.6,
+      0.75,
+      0.9,
+      1.0
+    ]
+  },
+  "LogisticRegression": [
+    {
+      "model__C": [
+        0.001,
+        0.003,
+        0.01,
+        0.03,
+        0.1,
+        0.3,
+        1.0,
+        3.0,
+        10.0,
+        30.0,
+        100.0
+      ],
+      "model__class_weight": [
+        null,
+        "balanced"
+      ],
+      "model__l1_ratio": [
+        1.0
+      ],
+      "model__max_iter": [
+        500,
+        1000,
+        2000
+      ],
+      "model__penalty": [
+        "l1"
+      ],
+      "model__solver": [
+        "saga"
+      ]
+    },
+    {
+      "model__C": [
+        0.001,
+        0.003,
+        0.01,
+        0.03,
+        0.1,
+        0.3,
+        1.0,
+        3.0,
+        10.0,
+        30.0,
+        100.0
+      ],
+      "model__class_weight": [
+        null,
+        "balanced"
+      ],
+      "model__l1_ratio": [
+        0.0
+      ],
+      "model__max_iter": [
+        500,
+        1000,
+        2000
+      ],
+      "model__penalty": [
+        "l2"
+      ],
+      "model__solver": [
+        "lbfgs",
+        "liblinear",
+        "saga"
+      ]
+    },
+    {
+      "model__C": [
+        0.001,
+        0.003,
+        0.01,
+        0.03,
+        0.1,
+        0.3,
+        1.0,
+        3.0,
+        10.0,
+        30.0,
+        100.0
+      ],
+      "model__class_weight": [
+        null,
+        "balanced"
+      ],
+      "model__l1_ratio": [
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9
+      ],
+      "model__max_iter": [
+        500,
+        1000,
+        2000
+      ],
+      "model__penalty": [
+        "elasticnet"
+      ],
+      "model__solver": [
+        "saga"
+      ]
+    }
+  ],
+  "RandomForestClassifier": {
+    "model__class_weight": [
+      null,
+      "balanced",
+      "balanced_subsample"
+    ],
+    "model__max_depth": [
+      null,
+      5,
+      10,
+      20,
+      30
+    ],
+    "model__max_features": [
+      "sqrt",
+      "log2",
+      0.5,
+      null
+    ],
+    "model__min_samples_leaf": [
+      1,
+      2,
+      4,
+      8
+    ],
+    "model__min_samples_split": [
+      2,
+      5,
+      10,
+      20
+    ],
+    "model__n_estimators": [
+      100,
+      200,
+      300,
+      500
+    ]
+  }
+}

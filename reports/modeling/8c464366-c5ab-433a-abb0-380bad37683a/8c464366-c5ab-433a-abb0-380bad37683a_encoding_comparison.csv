@@ -1,0 +1,7 @@
+algorithm,scenario,encoding,compatible,error,oof_average_precision,oof_f1_at_0_5,oof_duration_seconds,output_sparse,transformed_rows,transformed_features,transformed_matrix_bytes
+LogisticRegression,leakage_controlled,onehot,True,,0.5954960260366,0.5504768168365669,2.4578310169999895,True,16036,45,1026308
+LogisticRegression,leakage_controlled,ordinal,True,,0.27100519029496495,0.0,8.178666850999434,False,16036,5,641440
+GradientBoostingClassifier,leakage_controlled,onehot,True,,0.6257205112024277,0.5587280986372486,3.6090581270000257,True,16036,45,1026308
+GradientBoostingClassifier,leakage_controlled,ordinal,True,,0.6233302000684714,0.5587518283764018,10.01472497100076,False,16036,5,641440
+RandomForestClassifier,leakage_controlled,onehot,True,,0.629133994195934,0.6164432317000831,7.368515992000539,True,16036,45,1026308
+RandomForestClassifier,leakage_controlled,ordinal,True,,0.6243428312211339,0.6157048687406037,21.436507970000093,False,16036,5,641440

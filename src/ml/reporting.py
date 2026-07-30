@@ -290,6 +290,8 @@ def write_feature_ablation_report(
     full = results["scenario_definitions"]["full_feature"]
     content = f"""# Feature and encoding sensitivity report
 
+Run ID: `{results["run_id"]}`
+
 ## Prespecified scenarios
 
 ### Leakage-controlled primary analysis
@@ -362,6 +364,8 @@ def write_rule_catalog(
         )
     content = f"""# Executed data-quality rule catalog
 
+Run ID: `{results["run_id"]}`
+
 This catalog is generated from the same Python metadata used by the audit engine. It lists only implemented rules. Audit-event counts are not mutually exclusive: one row or `natural_key` may violate multiple rules. ETL rows loaded/skipped, normalization diagnostics, audit events, directly affected rows, and group-propagated positive labels are distinct quantities.
 
 ## Run counts
@@ -370,7 +374,7 @@ This catalog is generated from the same Python metadata used by the audit engine
 
 ## Rule definitions
 
-{"".join(details)}
+{"".join(details).rstrip()}
 """
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")

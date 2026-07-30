@@ -38,14 +38,16 @@ This project implements a full MLOps pipeline for ingesting, validating, and ana
    The `ml-trainer` service turns the audited ingest into a supervised ML task:
    - target: whether a staged row is likely to contain a data-quality issue
    - training: automated after ETL
-   - split: stratified 80% training / 20% test with `random_state=42`
+   - split: approximately 80% training / 20% test, stratified and group-disjoint by `natural_key`, with `random_state=42`
    - sealed test: never used for model, feature, transformation, or hyperparameter selection
    - candidate family: exactly Logistic Regression, Gradient Boosting, and Random Forest
    - search: `RandomizedSearchCV`, 40 combinations per algorithm, `refit=True`, and `n_jobs=-1`
-   - validation: `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)`
+   - validation: `StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)`, with groups passed explicitly to every search and OOF evaluation
    - primary criterion: mean cross-validated Average Precision (`scoring="average_precision"`)
    - tie-breaker: mean cross-validated F1 only if Average Precision is exactly tied
    - leakage control: imputation, categorical encoding, and applicable scaling remain inside `Pipeline`/`ColumnTransformer`
+   - feature analysis: a leakage-controlled primary scenario excludes direct audit-rule proxies; a full-feature scenario is reported only as sensitivity analysis
+   - training estimates: probabilities and the operational F2 threshold come from true grouped out-of-fold predictions
    - final evaluation: each refitted best configuration is evaluated once on the sealed test
    - registry: versioned candidate metadata in `mlops.model_candidates` and selected run in `mlops.training_runs`
    - scoring: row-level probabilities stored in `mlops.predictions`
@@ -64,7 +66,7 @@ All spaces are discrete, recorded verbatim in every run, and sampled with `rando
 | Gradient Boosting | `n_estimators=[50, 100, 150, 200, 300]`; `learning_rate=[0.01, 0.03, 0.05, 0.1, 0.2]`; `max_depth=[1, 2, 3, 4]`; `subsample=[0.6, 0.75, 0.9, 1.0]`; `min_samples_split=[2, 5, 10, 20]`; `min_samples_leaf=[1, 2, 5, 10]` |
 | Random Forest | `n_estimators=[100, 200, 300, 500]`; `max_depth=[null, 5, 10, 20, 30]`; `max_features=["sqrt", "log2", 0.5, null]`; `min_samples_split=[2, 5, 10, 20]`; `min_samples_leaf=[1, 2, 4, 8]`; `class_weight=[null, "balanced", "balanced_subsample"]` |
 
-Logistic Regression uses one-hot encoding plus standardization. The tree models use ordinal encoding (unknown value `-1`) and no scaling to keep the 200 Gradient Boosting fits computationally feasible. Both encoders and every imputer are fitted only inside each CV fold.
+All three primary pipelines use sparse one-hot encoding because the predictors are nominal; Logistic Regression additionally standardizes numeric inputs when present. The one-hot versus ordinal comparison is retained as a controlled training-set ablation using identical grouped folds and fixed classifier parameters. Every encoder, imputer, and scaler is fitted only inside its fold.
 
 ### Reproduce the scientific experiment
 
@@ -110,45 +112,51 @@ python -m ruff format --check src/ml src/dq/checks.py src/db/init_db.py src/db/s
 
 Each run writes lightweight publication evidence to `reports/modeling/<run_id>/`: complete `cv_results_` CSV files, the exact search-space JSON, comparison CSV, result JSON, curve points, ROC/PR figures, and SHA-256 manifest. Fitted pipelines and the selected-model alias are stored under `artifacts/experiments/<run_id>/` and intentionally ignored by Git.
 
+New UUID run directories are ignored by default to keep routine experiments out of Git. After scientific review, publish only a deliberately selected run with `git add -f reports/modeling/<run_id>` and update `latest_run.json`; interrupted or exploratory runs remain local.
+
 The generated methodological and editorial documents are:
 
 - `docs/hyperparameter_selection_report.md`
 - `docs/editorial_response_hyperparameters.md`
+- `docs/feature_ablation_report.md`
+- `docs/rule_catalog.md`
+- `docs/ai_article_review_guide.md`
 
-The run uses approximately 600 CV fits (120 sampled configurations × 5 folds), plus cross-validated F1 verification. Runtime and memory depend on CPU cores; use `--n-jobs 1` on memory-constrained systems, but keep `--n-iter 40` for the reported experiment.
+The two declared feature scenarios require 1,200 search fits (2 scenarios × 3 algorithms × 40 sampled configurations × 5 folds), followed by grouped OOF estimation and the encoding ablation. Runtime and memory depend on CPU cores; use `--n-jobs 1` on memory-constrained systems, but keep `--n-iter 40` for the reported experiment.
 
 ### Latest verified experiment
 
-Run `0f6f077d-9e12-4129-93bf-7048a7d15bdc` used all 20,045 source rows (15,392 class 0; 4,653 class 1), with 16,036 training and 4,009 sealed test rows. The source SHA-256 is `fe366924ce44b577c74f72282b042ca7908aedf59445db00893b9a3b2d58848f`.
+Run `8c464366-c5ab-433a-abb0-380bad37683a` used all 20,045 source rows (15,392 class 0; 4,653 class 1) and 18,179 `natural_key` groups. The group-disjoint split contains 16,036 training rows/14,544 groups and 4,009 sealed-test rows/3,635 groups, with zero group overlap. The source SHA-256 is `fe366924ce44b577c74f72282b042ca7908aedf59445db00893b9a3b2d58848f`.
 
-| Algorithm | CV Average Precision (mean ± SD) | CV F1 | Test Average Precision | Test F1 | Status |
+| Primary leakage-controlled model | Grouped-CV Average Precision (mean ± SD) | Grouped-OOF F1 | Test Average Precision | Test F1 | Status |
 |---|---:|---:|---:|---:|---|
-| Logistic Regression | 0.846745 ± 0.012465 | 0.743507 | 0.846498 | 0.741497 | rejected |
-| Gradient Boosting | **0.916566 ± 0.004211** | **0.823544** | 0.916629 | 0.821705 | **selected** |
-| Random Forest | 0.914684 ± 0.005417 | 0.813988 | 0.917905 | 0.815244 | rejected |
+| Logistic Regression | 0.598698 ± 0.012425 | 0.550263 | 0.630255 | 0.575307 | rejected |
+| Gradient Boosting | 0.627654 ± 0.015247 | 0.558527 | 0.656070 | 0.576206 | rejected |
+| Random Forest | **0.631359 ± 0.013577** | **0.616500** | 0.655390 | **0.631330** | **selected** |
 
-Gradient Boosting was selected before test evaluation because it had the highest training-CV Average Precision. Random Forest's slightly higher test Average Precision did not change the winner. The complete parameters, all test metrics, confusion matrices, and curves are under `reports/modeling/0f6f077d-9e12-4129-93bf-7048a7d15bdc/`.
+Random Forest was selected before test evaluation because it had the highest grouped training-CV Average Precision. Test metrics did not participate in model, feature, or threshold selection. At threshold 0.5, its sealed-test accuracy is 0.805687, precision 0.564298, recall 0.716434, F1 0.631330, ROC AUC 0.849264, and Average Precision 0.655390. The operational threshold 0.36 was selected exclusively from grouped OOF training probabilities by maximizing F2; it is reported separately from the 0.5 reference evaluation. Complete parameters, both scenarios, confusion matrices, curves, prediction provenance, and hashes are under `reports/modeling/8c464366-c5ab-433a-abb0-380bad37683a/`.
 
-This verified run used the database-independent reproduction path because Docker Desktop/Supabase was unavailable in the execution environment; therefore its JSON correctly records persistence status `not_requested`. The same payload is written to Supabase by the database-backed command, and the migration can be applied with:
+This run executed in Docker and its registry persistence status is `success`. The Storage upload is transparently recorded as `failed`: the full-feature Random Forest pipeline exceeded the then-active 50 MiB local object limit after the smaller artifacts had uploaded. All local artifacts and their hashes remain available; increase `SUPABASE_STORAGE_FILE_SIZE_LIMIT` before a new full run when remote persistence of every candidate binary is required. Apply the additive grouped-validation migration with:
 
 ```bash
 psql "$DB_CONNECTION_STRING" \
-  -f sql/migrations/002_q1_hyperparameter_traceability_up.sql
+  -f sql/migrations/003_grouped_oof_scenarios_up.sql
 ```
 
-Rollback (drops only the additive Q1 candidate table/columns):
+Rollback of the grouped-validation additions:
 
 ```bash
 psql "$DB_CONNECTION_STRING" \
-  -f sql/migrations/002_q1_hyperparameter_traceability_down.sql
+  -f sql/migrations/003_grouped_oof_scenarios_down.sql
 ```
 
 Computational limitations observed for the verified run:
 
-- Model search/evaluation took 665 seconds (about 712 seconds including workbook reconstruction) on 20 parallel workers and briefly used roughly 4–5 GB across worker processes.
-- Tree-model ordinal encoding is a documented tractability trade-off; it avoids a large dense one-hot matrix but imposes numeric codes that should not be interpreted as substantive category order.
+- End-to-end model search, grouped OOF evaluation, ablation, persistence, and reporting took 1,839.65 seconds on 20 logical CPUs; peak trainer memory observed during the heaviest parallel search was approximately 4.53 GiB.
+- Sparse one-hot encoding is the primary representation. Ordinal encoding is a sensitivity benchmark only and its numeric codes must not be interpreted as substantive category order.
 - scikit-learn 1.9.0 still executes the editor-requested `penalty` search but emits a deprecation warning because the library plans to replace that API in 1.10. The pinned 1.9.0 environment preserves this experiment; any API migration requires a new run and new reported metrics.
-- Supabase/Storage persistence could not be exercised in the verified local environment because Docker Desktop was unavailable. SQL shape, additive migration, rollback, payload fields, and local artifact persistence are tested; database-backed reproduction remains the required integration check where Supabase is running.
+- The target is a deterministic audit-rule proxy, not independently adjudicated ground truth. The full-feature scenario measures rule reproduction and must not replace the leakage-controlled primary result.
+- The interrupted replica `53d93eee-bbb9-43ef-8ca3-1639ce2f7947` is incomplete and is deliberately excluded from publication evidence.
 
 4. **View Dashboard**
    Navigate to [http://localhost:8501](http://localhost:8501).

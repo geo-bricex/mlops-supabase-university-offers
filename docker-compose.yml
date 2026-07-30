@@ -158,7 +158,7 @@ services:
       POSTGREST_URL: http://rest:3000
       PGRST_JWT_SECRET: ${JWT_SECRET}
       DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres?options=-c%20search_path%3Dstorage%2Cpublic
-      FILE_SIZE_LIMIT: 52428800
+      FILE_SIZE_LIMIT: ${SUPABASE_STORAGE_FILE_SIZE_LIMIT:-268435456}
       STORAGE_BACKEND: file
       FILE_STORAGE_BACKEND_PATH: /var/lib/storage
       TENANT_ID: stub
@@ -191,7 +191,7 @@ services:
       SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
       PGRST_JWT_SECRET: ${JWT_SECRET}
       DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres?options=-c%20search_path%3Dstorage%2Cpublic
-      FILE_SIZE_LIMIT: 52428800
+      FILE_SIZE_LIMIT: ${SUPABASE_STORAGE_FILE_SIZE_LIMIT:-268435456}
       STORAGE_BACKEND: file
       FILE_STORAGE_BACKEND_PATH: /var/lib/storage
       TENANT_ID: stub

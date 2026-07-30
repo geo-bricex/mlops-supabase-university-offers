@@ -3,8 +3,8 @@ import json
 import logging
 import os
 import time
+import urllib.error
 import urllib.request
-from typing import Dict, Tuple
 
 from sqlalchemy import text
 
@@ -24,18 +24,20 @@ DEFAULT_ENDPOINTS = {
 }
 
 
-def _load_endpoints() -> Dict[str, str]:
+def _load_endpoints() -> dict[str, str]:
     raw = os.getenv("SUPABASE_HEALTH_ENDPOINTS")
     if raw:
         try:
             parsed = json.loads(raw)
             return {str(k): str(v) for k, v in parsed.items()}
         except json.JSONDecodeError:
-            logger.warning("SUPABASE_HEALTH_ENDPOINTS is not valid JSON. Using defaults.")
+            logger.warning(
+                "SUPABASE_HEALTH_ENDPOINTS is not valid JSON. Using defaults."
+            )
     return DEFAULT_ENDPOINTS
 
 
-def _probe(url: str, timeout: int) -> Tuple[str, int, float, dict]:
+def _probe(url: str, timeout: int) -> tuple[str, int, float, dict]:
     start = time.time()
     status_code = None
     detail = {}
@@ -43,7 +45,7 @@ def _probe(url: str, timeout: int) -> Tuple[str, int, float, dict]:
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req, timeout=timeout) as response:
             status_code = response.getcode()
-    except Exception as exc:
+    except (OSError, TimeoutError, ValueError, urllib.error.URLError) as exc:
         detail["error"] = str(exc)
     latency_ms = (time.time() - start) * 1000.0
     if status_code is None:
@@ -53,7 +55,9 @@ def _probe(url: str, timeout: int) -> Tuple[str, int, float, dict]:
     return status, status_code or 0, latency_ms, detail
 
 
-def _record_health(service: str, url: str, status: str, code: int, latency_ms: float, detail: dict) -> None:
+def _record_health(
+    service: str, url: str, status: str, code: int, latency_ms: float, detail: dict
+) -> None:
     with get_db_session() as session:
         session.execute(
             text(
@@ -80,10 +84,16 @@ def run_once(timeout: int = 5) -> None:
 
 
 def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
     parser = argparse.ArgumentParser()
-    parser.add_argument("--interval", type=int, default=0, help="Seconds between checks (0 = once).")
-    parser.add_argument("--timeout", type=int, default=5, help="HTTP timeout in seconds.")
+    parser.add_argument(
+        "--interval", type=int, default=0, help="Seconds between checks (0 = once)."
+    )
+    parser.add_argument(
+        "--timeout", type=int, default=5, help="HTTP timeout in seconds."
+    )
     args = parser.parse_args()
 
     if args.interval and args.interval > 0:

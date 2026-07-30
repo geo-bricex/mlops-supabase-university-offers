@@ -1,6 +1,8 @@
 {
-  "comparison_csv": "reports/modeling/0f6f077d-9e12-4129-93bf-7048a7d15bdc/0f6f077d-9e12-4129-93bf-7048a7d15bdc_model_comparison.csv",
-  "results_json": "reports/modeling/0f6f077d-9e12-4129-93bf-7048a7d15bdc/0f6f077d-9e12-4129-93bf-7048a7d15bdc_results.json",
-  "run_id": "0f6f077d-9e12-4129-93bf-7048a7d15bdc",
-  "selected_model": "GradientBoostingClassifier"
+  "comparison_csv": "reports/modeling/8c464366-c5ab-433a-abb0-380bad37683a/8c464366-c5ab-433a-abb0-380bad37683a_model_comparison.csv",
+  "primary_scenario": "leakage_controlled",
+  "results_json": "reports/modeling/8c464366-c5ab-433a-abb0-380bad37683a/8c464366-c5ab-433a-abb0-380bad37683a_results.json",
+  "run_id": "8c464366-c5ab-433a-abb0-380bad37683a",
+  "scenario_comparison_csv": "reports/modeling/8c464366-c5ab-433a-abb0-380bad37683a/8c464366-c5ab-433a-abb0-380bad37683a_scenario_comparison.csv",
+  "selected_model": "RandomForestClassifier"
 }
