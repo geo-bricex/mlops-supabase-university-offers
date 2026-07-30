@@ -94,7 +94,7 @@ For the 2025 dataset, the pipeline produced the following metrics:
 These results demonstrate that automated quality checks are essential for public data governance and for reliable downstream analytics.
 
 ### 6.1 Quality-risk classification
-Experiment `e70cde76-34e4-4a88-ac1f-9c5cdf3e7673` contained 20,045 observations (15,392 negative; 4,653 positive), divided into 16,036 training and 4,009 test observations. Gradient Boosting was selected with cross-validated Average Precision 0.916566 (SD 0.004211), ahead of Random Forest (0.914684, SD 0.005417) and Logistic Regression (0.846745, SD 0.012465). Its sealed-test results were accuracy 0.919681, precision 0.848000, recall 0.796992, F1 0.821705, ROC AUC 0.969153, and Average Precision 0.916629, with confusion matrix `[[2945, 133], [189, 742]]`. Although Random Forest obtained a slightly higher test Average Precision (0.917905), it was not selected because test metrics were excluded from model selection.
+Experiment `0f6f077d-9e12-4129-93bf-7048a7d15bdc` contained 20,045 observations (15,392 negative; 4,653 positive), divided into 16,036 training and 4,009 test observations. Gradient Boosting was selected with cross-validated Average Precision 0.916566 (SD 0.004211), ahead of Random Forest (0.914684, SD 0.005417) and Logistic Regression (0.846745, SD 0.012465). Its sealed-test results were accuracy 0.919681, precision 0.848000, recall 0.796992, F1 0.821705, ROC AUC 0.969153, and Average Precision 0.916629, with confusion matrix `[[2945, 133], [189, 742]]`. Although Random Forest obtained a slightly higher test Average Precision (0.917905), it was not selected because test metrics were excluded from model selection.
 
 ## 7. Visualization and Analytics
 The Streamlit dashboard provides:

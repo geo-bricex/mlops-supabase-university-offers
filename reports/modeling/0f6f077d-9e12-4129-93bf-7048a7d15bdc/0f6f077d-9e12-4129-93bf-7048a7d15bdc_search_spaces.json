@@ -58,6 +58,9 @@
         null,
         "balanced"
       ],
+      "model__l1_ratio": [
+        1.0
+      ],
       "model__max_iter": [
         500,
         1000,
@@ -87,6 +90,9 @@
       "model__class_weight": [
         null,
         "balanced"
+      ],
+      "model__l1_ratio": [
+        0.0
       ],
       "model__max_iter": [
         500,

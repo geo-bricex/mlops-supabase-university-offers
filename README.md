@@ -119,7 +119,7 @@ The run uses approximately 600 CV fits (120 sampled configurations × 5 folds), 
 
 ### Latest verified experiment
 
-Run `e70cde76-34e4-4a88-ac1f-9c5cdf3e7673` used all 20,045 source rows (15,392 class 0; 4,653 class 1), with 16,036 training and 4,009 sealed test rows. The source SHA-256 is `fe366924ce44b577c74f72282b042ca7908aedf59445db00893b9a3b2d58848f`.
+Run `0f6f077d-9e12-4129-93bf-7048a7d15bdc` used all 20,045 source rows (15,392 class 0; 4,653 class 1), with 16,036 training and 4,009 sealed test rows. The source SHA-256 is `fe366924ce44b577c74f72282b042ca7908aedf59445db00893b9a3b2d58848f`.
 
 | Algorithm | CV Average Precision (mean ± SD) | CV F1 | Test Average Precision | Test F1 | Status |
 |---|---:|---:|---:|---:|---|
@@ -127,7 +127,7 @@ Run `e70cde76-34e4-4a88-ac1f-9c5cdf3e7673` used all 20,045 source rows (15,392 c
 | Gradient Boosting | **0.916566 ± 0.004211** | **0.823544** | 0.916629 | 0.821705 | **selected** |
 | Random Forest | 0.914684 ± 0.005417 | 0.813988 | 0.917905 | 0.815244 | rejected |
 
-Gradient Boosting was selected before test evaluation because it had the highest training-CV Average Precision. Random Forest's slightly higher test Average Precision did not change the winner. The complete parameters, all test metrics, confusion matrices, and curves are under `reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/`.
+Gradient Boosting was selected before test evaluation because it had the highest training-CV Average Precision. Random Forest's slightly higher test Average Precision did not change the winner. The complete parameters, all test metrics, confusion matrices, and curves are under `reports/modeling/0f6f077d-9e12-4129-93bf-7048a7d15bdc/`.
 
 This verified run used the database-independent reproduction path because Docker Desktop/Supabase was unavailable in the execution environment; therefore its JSON correctly records persistence status `not_requested`. The same payload is written to Supabase by the database-backed command, and the migration can be applied with:
 

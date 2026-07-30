@@ -1,6 +1,6 @@
 {
-  "comparison_csv": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_model_comparison.csv",
-  "results_json": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_results.json",
-  "run_id": "e70cde76-34e4-4a88-ac1f-9c5cdf3e7673",
+  "comparison_csv": "reports/modeling/0f6f077d-9e12-4129-93bf-7048a7d15bdc/0f6f077d-9e12-4129-93bf-7048a7d15bdc_model_comparison.csv",
+  "results_json": "reports/modeling/0f6f077d-9e12-4129-93bf-7048a7d15bdc/0f6f077d-9e12-4129-93bf-7048a7d15bdc_results.json",
+  "run_id": "0f6f077d-9e12-4129-93bf-7048a7d15bdc",
   "selected_model": "GradientBoostingClassifier"
 }

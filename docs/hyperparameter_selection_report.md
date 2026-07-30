@@ -2,15 +2,15 @@
 
 ## Identificación
 
-- `run_id`: `e70cde76-34e4-4a88-ac1f-9c5cdf3e7673`
-- Fecha UTC: `2026-07-30T13:23:25.809303+00:00`
+- `run_id`: `0f6f077d-9e12-4129-93bf-7048a7d15bdc`
+- Fecha UTC: `2026-07-30T14:03:19.082699+00:00`
 - Hash lógico del dataset: `ff6be902980c3c588c04cfdcf4fafe43637d1d649ed1c43aeb7f37f798830d1d`
 - Hash del archivo fuente: `fe366924ce44b577c74f72282b042ca7908aedf59445db00893b9a3b2d58848f`
 - Registros: 20045
 - Distribución de clases: `{"0": 15392, "1": 4653}`
 - Python: `3.14.5`
 - scikit-learn: `1.9.0`
-- Commit base de Git: `5843d019df9f694930314dc2c1fb3e3cf49b77d7`; árbol sucio durante la ejecución: `True`
+- Commit base de Git: `7f951f1860e4396cfe9eb7821b2d91db3220d117`; árbol sucio durante la ejecución: `False`
 
 ## Metodología
 
@@ -22,8 +22,8 @@ La imputación, la codificación one-hot para Logistic Regression, la codificaci
 
 ### LogisticRegression
 
-- Espacio de búsqueda: `[{"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__max_iter": [500, 1000, 2000], "model__penalty": ["l1"], "model__solver": ["saga"]}, {"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__max_iter": [500, 1000, 2000], "model__penalty": ["l2"], "model__solver": ["lbfgs", "liblinear", "saga"]}, {"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [0.1, 0.25, 0.5, 0.75, 0.9], "model__max_iter": [500, 1000, 2000], "model__penalty": ["elasticnet"], "model__solver": ["saga"]}]`
-- Parámetros finales: `{"model__C": 3.0, "model__class_weight": null, "model__max_iter": 1000, "model__penalty": "l2", "model__solver": "liblinear"}`
+- Espacio de búsqueda: `[{"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [1.0], "model__max_iter": [500, 1000, 2000], "model__penalty": ["l1"], "model__solver": ["saga"]}, {"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [0.0], "model__max_iter": [500, 1000, 2000], "model__penalty": ["l2"], "model__solver": ["lbfgs", "liblinear", "saga"]}, {"model__C": [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0, 30.0, 100.0], "model__class_weight": [null, "balanced"], "model__l1_ratio": [0.1, 0.25, 0.5, 0.75, 0.9], "model__max_iter": [500, 1000, 2000], "model__penalty": ["elasticnet"], "model__solver": ["saga"]}]`
+- Parámetros finales: `{"model__C": 3.0, "model__class_weight": null, "model__l1_ratio": 0.0, "model__max_iter": 1000, "model__penalty": "l2", "model__solver": "liblinear"}`
 - Mejor Average Precision de CV: 0.846745
 - Desviación estándar de CV: 0.012465
 - F1 promedio de CV (solo desempate): 0.743507
@@ -68,11 +68,11 @@ La versión anterior a esta revisión de `reports/article.md` no publicaba métr
 
 La ejecución produce los tres mejores pipelines, el alias del modelo seleccionado, los `cv_results_` completos, espacios, métricas, matrices de confusión, puntos y figuras ROC/Precision–Recall, JSON de resultados y CSV comparativo. Cuando Supabase está disponible, `mlops.training_runs` conserva la ejecución y `mlops.model_candidates` conserva un registro por algoritmo con estado `selected` o `rejected`. Estado de persistencia de esta ejecución: `not_requested`.
 
-Directorio público de resultados: `reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673`. Los binarios `.joblib` permanecen excluidos de Git y su ruta/hash se conserva en el manifiesto y registro.
+Directorio público de resultados: `reports/modeling/0f6f077d-9e12-4129-93bf-7048a7d15bdc`. Los binarios `.joblib` permanecen excluidos de Git y su ruta/hash se conserva en el manifiesto y registro.
 
 ## Limitaciones reproducibles
 
-- La búsqueda y evaluación tardó 665.04 segundos, sin contar la reconstrucción del Excel. `n_jobs=-1` puede elevar el consumo de memoria; equipos limitados pueden usar `--n-jobs 1` manteniendo las 40 iteraciones.
+- La búsqueda y evaluación tardó 375.22 segundos, sin contar la reconstrucción del Excel. `n_jobs=-1` puede elevar el consumo de memoria; equipos limitados pueden usar `--n-jobs 1` manteniendo las 40 iteraciones.
 - La codificación ordinal de los modelos de árboles es una decisión de tractabilidad y sus códigos no representan orden sustantivo entre categorías.
 - scikit-learn 1.9.0 ejecuta el espacio solicitado de `penalty`, pero advierte que esa API será retirada en una versión futura. La versión está fijada para reproducir estos resultados; una migración exige repetir el experimento.
 - Esta ejecución local registra persistencia `not_requested` porque Supabase no estaba disponible. La migración, el esquema y la ruta de registro quedan preparados para la verificación de integración en un entorno con Supabase activo.
@@ -81,7 +81,7 @@ Directorio público de resultados: `reports/modeling/e70cde76-34e4-4a88-ac1f-9c5
 
 1. Sustituir la descripción de selección de modelos por la división 80/20 estratificada, RandomizedSearchCV de cinco pliegues y Average Precision como criterio primario.
 2. Incorporar la tabla comparativa de este informe y los parámetros finales de los tres algoritmos.
-3. Incorporar las tres figuras ROC y las tres figuras Precision–Recall generadas en `reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673`; no reconstruirlas con cifras redondeadas.
+3. Incorporar las tres figuras ROC y las tres figuras Precision–Recall generadas en `reports/modeling/0f6f077d-9e12-4129-93bf-7048a7d15bdc`; no reconstruirlas con cifras redondeadas.
 4. Indicar explícitamente que el test se utilizó una sola vez por configuración final y nunca para seleccionar modelo, variables o transformaciones.
 5. Referenciar el `run_id`, los CSV de `cv_results_`, el hash del dataset, el commit base y el repositorio público.
 6. Reemplazar cualquier afirmación externa de que Random Forest era el ganador por **GradientBoostingClassifier**, que es el resultado real de esta ejecución.
