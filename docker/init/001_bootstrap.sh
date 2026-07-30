@@ -1,6 +1,7 @@
 #!/bin/sh
 set -eu
 
+# This file must remain LF-only because PostgreSQL executes it inside Linux.
 psql -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -v password="$POSTGRES_PASSWORD" <<'SQL'
 SET app.password = :'password';
 

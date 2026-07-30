@@ -45,8 +45,11 @@ services:
     volumes:
       - ./docker/volumes/api/kong.yml:/home/kong/temp.yml:ro
     entrypoint: >
-      bash -c 'eval "echo \"$$(cat /home/kong/temp.yml)\"" >
-      /home/kong/kong.yml && /docker-entrypoint.sh kong docker-start'
+      bash -c 'sed
+      -e "s|\$${SUPABASE_ANON_KEY}|$${SUPABASE_ANON_KEY}|g"
+      -e "s|\$${SUPABASE_SERVICE_KEY}|$${SUPABASE_SERVICE_KEY}|g"
+      /home/kong/temp.yml > /home/kong/kong.yml
+      && /docker-entrypoint.sh kong docker-start'
     networks:
       - supabase_network
 
