@@ -37,13 +37,16 @@ services:
       - "${KONG_PORT_TLS}:8443"
     environment:
       KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
       KONG_DNS_ORDER: LAST,A,CNAME
       KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
     volumes:
-      - ./docker/volumes/api/kong.yml:/var/lib/kong/kong.yml:ro
+      - ./docker/volumes/api/kong.yml:/home/kong/temp.yml:ro
+    entrypoint: >
+      bash -c 'eval "echo \"$$(cat /home/kong/temp.yml)\"" >
+      /home/kong/kong.yml && /docker-entrypoint.sh kong docker-start'
     networks:
       - supabase_network
 
@@ -450,7 +453,8 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - ML_MODEL_NAME=${ML_MODEL_NAME:-quality_risk_classifier}
       - ML_RISK_THRESHOLD=${ML_RISK_THRESHOLD:-0.5}
-      - ML_ARTIFACT_DIR=${ML_ARTIFACT_DIR:-artifacts/models}
+      - ML_ARTIFACT_DIR=${ML_ARTIFACT_DIR:-artifacts/experiments}
+      - ML_REPORT_DIR=${ML_REPORT_DIR:-reports/modeling}
     command: ["python", "-m", "src.ml.train"]
     depends_on:
       db:

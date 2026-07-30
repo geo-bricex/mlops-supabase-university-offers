@@ -287,6 +287,13 @@ CREATE TABLE IF NOT EXISTS mlops.training_runs (
     positive_rows INT,
     positive_rate NUMERIC,
     selected_metric TEXT,
+    search_method TEXT,
+    optimization_metric TEXT,
+    cv_folds INT,
+    search_iterations INT,
+    search_spaces JSONB,
+    best_params JSONB,
+    best_score NUMERIC,
     train_metrics JSONB,
     cv_metrics JSONB,
     candidate_metrics JSONB,
@@ -297,6 +304,15 @@ CREATE TABLE IF NOT EXISTS mlops.training_runs (
     storage_status TEXT,
     storage_paths JSONB,
     feature_schema JSONB,
+    dataset_sha256 TEXT,
+    dataset_rows INT,
+    class_distribution JSONB,
+    random_state INT,
+    python_version TEXT,
+    sklearn_version TEXT,
+    git_commit TEXT,
+    run_metadata JSONB,
+    model_status TEXT,
     notes TEXT,
     is_active BOOLEAN DEFAULT FALSE
 );
@@ -361,6 +377,52 @@ ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS candidate_metrics JSONB
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS overfit_gap NUMERIC;
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS storage_status TEXT;
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS storage_paths JSONB;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS search_method TEXT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS optimization_metric TEXT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS cv_folds INT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS search_iterations INT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS search_spaces JSONB;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS best_params JSONB;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS best_score NUMERIC;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS dataset_sha256 TEXT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS dataset_rows INT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS class_distribution JSONB;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS random_state INT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS python_version TEXT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS sklearn_version TEXT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS git_commit TEXT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS run_metadata JSONB;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS model_status TEXT;
+
+CREATE TABLE IF NOT EXISTS mlops.model_candidates (
+    candidate_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    run_id UUID NOT NULL REFERENCES mlops.training_runs(run_id) ON DELETE CASCADE,
+    algorithm TEXT NOT NULL,
+    model_status TEXT NOT NULL
+        CHECK (model_status IN ('candidate', 'selected', 'rejected')),
+    search_method TEXT NOT NULL,
+    optimization_metric TEXT NOT NULL,
+    cv_folds INT NOT NULL,
+    search_iterations INT NOT NULL,
+    search_space JSONB NOT NULL,
+    best_params JSONB NOT NULL,
+    best_score NUMERIC NOT NULL,
+    cv_mean NUMERIC NOT NULL,
+    cv_std NUMERIC NOT NULL,
+    cv_f1_mean NUMERIC,
+    cv_f1_std NUMERIC,
+    test_metrics JSONB,
+    confusion_matrix JSONB,
+    artifact_path TEXT,
+    cv_results_path TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (run_id, algorithm)
+);
+
+CREATE INDEX IF NOT EXISTS idx_mlops_model_candidates_run_id
+    ON mlops.model_candidates(run_id);
+CREATE INDEX IF NOT EXISTS idx_mlops_model_candidates_status
+    ON mlops.model_candidates(model_status);
 
 CREATE OR REPLACE VIEW mlops.v_latest_training_run AS
 SELECT *
@@ -454,6 +516,7 @@ ALTER TABLE mlops.training_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mlops.feature_importance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mlops.predictions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mlops.monitoring_runs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mlops.model_candidates ENABLE ROW LEVEL SECURITY;
 
 -- Allow public access for local dev (simply for ease of use in this context)
 -- In prod, you would configure specific policies.
@@ -485,6 +548,8 @@ DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.predictions;
 CREATE POLICY "Enable all for anon/service_role" ON mlops.predictions FOR ALL USING (true) WITH CHECK (true);
 DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.monitoring_runs;
 CREATE POLICY "Enable all for anon/service_role" ON mlops.monitoring_runs FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.model_candidates;
+CREATE POLICY "Enable all for anon/service_role" ON mlops.model_candidates FOR ALL USING (true) WITH CHECK (true);
 
 -- Grants for PostgREST + RPC
 GRANT USAGE ON SCHEMA core TO anon, authenticated, service_role;
@@ -500,6 +565,7 @@ GRANT SELECT ON mlops.training_runs TO anon, authenticated, service_role;
 GRANT SELECT ON mlops.feature_importance TO anon, authenticated, service_role;
 GRANT SELECT ON mlops.predictions TO anon, authenticated, service_role;
 GRANT SELECT ON mlops.monitoring_runs TO anon, authenticated, service_role;
+GRANT SELECT ON mlops.model_candidates TO anon, authenticated, service_role;
 GRANT SELECT ON mlops.v_latest_training_run TO anon, authenticated, service_role;
 GRANT SELECT ON mlops.v_latest_quality_risk_predictions TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION mlops.rpc_latest_quality_risks(INT) TO anon, authenticated, service_role;

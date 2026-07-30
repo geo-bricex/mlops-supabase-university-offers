@@ -77,6 +77,9 @@ Operational health is captured in `ops.service_health` using periodic checks aga
 ### 5.7 API Access (PostgREST + RPC)
 Analytical access is provided via PostgREST views and SQL RPC functions (e.g., top provinces, ingestion time series). This approach exposes a typed HTTP interface without additional backend code, and aligns with the Supabase security model.
 
+### 5.8 Quality-risk model selection
+The audited rows were split once into stratified training (80%) and test (20%) partitions with `random_state=42`. Hyperparameters for Logistic Regression, Gradient Boosting, and Random Forest were selected exclusively from training data using `RandomizedSearchCV` with 40 sampled configurations per algorithm, `StratifiedKFold(n_splits=5, shuffle=True, random_state=42)`, `scoring="average_precision"`, `refit=True`, and parallel execution. Imputation, categorical encoding, and Logistic Regression scaling were fitted inside scikit-learn pipelines in every fold. The model family was selected by mean cross-validated Average Precision; cross-validated F1 was reserved only for an exact tie. The sealed test metrics were computed only after the winner had been fixed.
+
 ## 6. Results
 For the 2025 dataset, the pipeline produced the following metrics:
 - rows_loaded: 20,045
@@ -89,6 +92,9 @@ For the 2025 dataset, the pipeline produced the following metrics:
 - conflicting_estado: 1,801
 
 These results demonstrate that automated quality checks are essential for public data governance and for reliable downstream analytics.
+
+### 6.1 Quality-risk classification
+Experiment `e70cde76-34e4-4a88-ac1f-9c5cdf3e7673` contained 20,045 observations (15,392 negative; 4,653 positive), divided into 16,036 training and 4,009 test observations. Gradient Boosting was selected with cross-validated Average Precision 0.916566 (SD 0.004211), ahead of Random Forest (0.914684, SD 0.005417) and Logistic Regression (0.846745, SD 0.012465). Its sealed-test results were accuracy 0.919681, precision 0.848000, recall 0.796992, F1 0.821705, ROC AUC 0.969153, and Average Precision 0.916629, with confusion matrix `[[2945, 133], [189, 742]]`. Although Random Forest obtained a slightly higher test Average Precision (0.917905), it was not selected because test metrics were excluded from model selection.
 
 ## 7. Visualization and Analytics
 The Streamlit dashboard provides:

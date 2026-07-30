@@ -1,0 +1,481 @@
+{
+  "created_at": "2026-07-30T13:23:25.809303+00:00",
+  "dataset": {
+    "class_distribution": {
+      "0": 15392,
+      "1": 4653
+    },
+    "dataset_file_id": "fe366924ce44b577c74f72282b042ca7",
+    "dataset_rows": 20045,
+    "dataset_sha256": "ff6be902980c3c588c04cfdcf4fafe43637d1d649ed1c43aeb7f37f798830d1d",
+    "label_rules": [
+      "duplicate_natural_key",
+      "missing_territory_norm",
+      "invalid_territory_pair",
+      "conflicting_estado",
+      "missing_nombre_ies",
+      "missing_nombre_carrera"
+    ],
+    "quality_metrics": {
+      "conflicting_estado": 1801,
+      "duplicates_in_file": 3706,
+      "invalid_territory": 1176,
+      "invalid_territory_pair": 0,
+      "missing_NOMBRE_CARRERA": 0,
+      "missing_NOMBRE_IES": 1
+    },
+    "source_path": "data/oferta-academica2025.xlsx",
+    "source_sha256": "fe366924ce44b577c74f72282b042ca7908aedf59445db00893b9a3b2d58848f",
+    "test_class_distribution": {
+      "0": 3078,
+      "1": 931
+    },
+    "test_rows": 4009,
+    "train_class_distribution": {
+      "0": 12314,
+      "1": 3722
+    },
+    "train_rows": 16036
+  },
+  "duration_seconds": 665.044781,
+  "environment": {
+    "git_commit": "5843d019df9f694930314dc2c1fb3e3cf49b77d7",
+    "git_dirty": true,
+    "python_version": "3.14.5",
+    "sklearn_version": "1.9.0"
+  },
+  "feature_schema": {
+    "categorical_features": [
+      "tipo_ies",
+      "tipo_financiamiento",
+      "campo_amplio",
+      "nivel_formacion",
+      "modalidad",
+      "estado",
+      "provincia_norm",
+      "canton_norm",
+      "geo_method"
+    ],
+    "meta_columns": [
+      "file_id",
+      "row_num",
+      "natural_key",
+      "actual_label",
+      "issue_count",
+      "issue_types"
+    ],
+    "numeric_features": [
+      "geo_score_prov",
+      "geo_score_canton",
+      "has_nombre_ies",
+      "has_nombre_carrera",
+      "has_provincia_norm",
+      "has_canton_norm",
+      "ies_name_len",
+      "carrera_name_len",
+      "natural_key_token_count"
+    ],
+    "target_column": "actual_label",
+    "task_name": "data_quality_risk_classification"
+  },
+  "method": {
+    "cv_folds": 5,
+    "cv_shuffle": true,
+    "cv_strategy": "StratifiedKFold",
+    "decision_threshold": 0.5,
+    "n_jobs": -1,
+    "optimization_metric": "average_precision",
+    "random_state": 42,
+    "refit": true,
+    "search_iterations": 40,
+    "search_method": "RandomizedSearchCV",
+    "split": "stratified 80/20 train/test",
+    "test_size": 0.2,
+    "test_used_for_selection": false
+  },
+  "model_version": "quality_risk_classifier-20260730T132325Z-e70cde76",
+  "models": [
+    {
+      "algorithm": "LogisticRegression",
+      "artifact_path": "artifacts/experiments/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_logisticregression_best_pipeline.joblib",
+      "best_params": {
+        "model__C": 3.0,
+        "model__class_weight": null,
+        "model__max_iter": 1000,
+        "model__penalty": "l2",
+        "model__solver": "liblinear"
+      },
+      "best_score": 0.8467447543993126,
+      "curve_paths": {
+        "precision_recall_curve_csv": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_logistic_precision_recall_curve.csv",
+        "precision_recall_curve_png": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_logistic_precision_recall_curve.png",
+        "roc_curve_csv": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_logistic_roc_curve.csv",
+        "roc_curve_png": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_logistic_roc_curve.png"
+      },
+      "cv_f1_mean": 0.7435068139406144,
+      "cv_f1_std": 0.01010990150183418,
+      "cv_folds": 5,
+      "cv_mean": 0.8467447543993126,
+      "cv_results_path": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_logisticregression_cv_results.csv",
+      "cv_std": 0.012464511728919443,
+      "model_status": "rejected",
+      "optimization_metric": "average_precision",
+      "search_iterations": 40,
+      "search_method": "RandomizedSearchCV",
+      "search_space": [
+        {
+          "model__C": [
+            0.001,
+            0.003,
+            0.01,
+            0.03,
+            0.1,
+            0.3,
+            1.0,
+            3.0,
+            10.0,
+            30.0,
+            100.0
+          ],
+          "model__class_weight": [
+            null,
+            "balanced"
+          ],
+          "model__max_iter": [
+            500,
+            1000,
+            2000
+          ],
+          "model__penalty": [
+            "l1"
+          ],
+          "model__solver": [
+            "saga"
+          ]
+        },
+        {
+          "model__C": [
+            0.001,
+            0.003,
+            0.01,
+            0.03,
+            0.1,
+            0.3,
+            1.0,
+            3.0,
+            10.0,
+            30.0,
+            100.0
+          ],
+          "model__class_weight": [
+            null,
+            "balanced"
+          ],
+          "model__max_iter": [
+            500,
+            1000,
+            2000
+          ],
+          "model__penalty": [
+            "l2"
+          ],
+          "model__solver": [
+            "lbfgs",
+            "liblinear",
+            "saga"
+          ]
+        },
+        {
+          "model__C": [
+            0.001,
+            0.003,
+            0.01,
+            0.03,
+            0.1,
+            0.3,
+            1.0,
+            3.0,
+            10.0,
+            30.0,
+            100.0
+          ],
+          "model__class_weight": [
+            null,
+            "balanced"
+          ],
+          "model__l1_ratio": [
+            0.1,
+            0.25,
+            0.5,
+            0.75,
+            0.9
+          ],
+          "model__max_iter": [
+            500,
+            1000,
+            2000
+          ],
+          "model__penalty": [
+            "elasticnet"
+          ],
+          "model__solver": [
+            "saga"
+          ]
+        }
+      ],
+      "test_metrics": {
+        "accuracy": 0.8862559241706162,
+        "average_precision": 0.8464975080680104,
+        "confusion_matrix": [
+          [
+            2899,
+            179
+          ],
+          [
+            277,
+            654
+          ]
+        ],
+        "f1": 0.7414965986394558,
+        "precision": 0.7851140456182473,
+        "recall": 0.7024704618689581,
+        "roc_auc": 0.9405363869154927,
+        "threshold": 0.5
+      }
+    },
+    {
+      "algorithm": "GradientBoostingClassifier",
+      "artifact_path": "artifacts/experiments/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_gradientboostingclassifier_best_pipeline.joblib",
+      "best_params": {
+        "model__learning_rate": 0.2,
+        "model__max_depth": 4,
+        "model__min_samples_leaf": 10,
+        "model__min_samples_split": 20,
+        "model__n_estimators": 300,
+        "model__subsample": 0.6
+      },
+      "best_score": 0.9165657976885226,
+      "curve_paths": {
+        "precision_recall_curve_csv": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_gradientboosting_precision_recall_curve.csv",
+        "precision_recall_curve_png": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_gradientboosting_precision_recall_curve.png",
+        "roc_curve_csv": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_gradientboosting_roc_curve.csv",
+        "roc_curve_png": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_gradientboosting_roc_curve.png"
+      },
+      "cv_f1_mean": 0.8235439674925275,
+      "cv_f1_std": 0.006115942291792276,
+      "cv_folds": 5,
+      "cv_mean": 0.9165657976885226,
+      "cv_results_path": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_gradientboostingclassifier_cv_results.csv",
+      "cv_std": 0.004211444686353964,
+      "model_status": "selected",
+      "optimization_metric": "average_precision",
+      "search_iterations": 40,
+      "search_method": "RandomizedSearchCV",
+      "search_space": {
+        "model__learning_rate": [
+          0.01,
+          0.03,
+          0.05,
+          0.1,
+          0.2
+        ],
+        "model__max_depth": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "model__min_samples_leaf": [
+          1,
+          2,
+          5,
+          10
+        ],
+        "model__min_samples_split": [
+          2,
+          5,
+          10,
+          20
+        ],
+        "model__n_estimators": [
+          50,
+          100,
+          150,
+          200,
+          300
+        ],
+        "model__subsample": [
+          0.6,
+          0.75,
+          0.9,
+          1.0
+        ]
+      },
+      "test_metrics": {
+        "accuracy": 0.9196807183836369,
+        "average_precision": 0.91662906492022,
+        "confusion_matrix": [
+          [
+            2945,
+            133
+          ],
+          [
+            189,
+            742
+          ]
+        ],
+        "f1": 0.8217054263565892,
+        "precision": 0.848,
+        "recall": 0.7969924812030075,
+        "roc_auc": 0.9691532507124118,
+        "threshold": 0.5
+      }
+    },
+    {
+      "algorithm": "RandomForestClassifier",
+      "artifact_path": "artifacts/experiments/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_randomforestclassifier_best_pipeline.joblib",
+      "best_params": {
+        "model__class_weight": "balanced",
+        "model__max_depth": 30,
+        "model__max_features": "log2",
+        "model__min_samples_leaf": 1,
+        "model__min_samples_split": 10,
+        "model__n_estimators": 300
+      },
+      "best_score": 0.9146844947284812,
+      "curve_paths": {
+        "precision_recall_curve_csv": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_randomforest_precision_recall_curve.csv",
+        "precision_recall_curve_png": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_randomforest_precision_recall_curve.png",
+        "roc_curve_csv": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_randomforest_roc_curve.csv",
+        "roc_curve_png": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_randomforest_roc_curve.png"
+      },
+      "cv_f1_mean": 0.8139882607129703,
+      "cv_f1_std": 0.010314065626656502,
+      "cv_folds": 5,
+      "cv_mean": 0.9146844947284812,
+      "cv_results_path": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_randomforestclassifier_cv_results.csv",
+      "cv_std": 0.005417147611681759,
+      "model_status": "rejected",
+      "optimization_metric": "average_precision",
+      "search_iterations": 40,
+      "search_method": "RandomizedSearchCV",
+      "search_space": {
+        "model__class_weight": [
+          null,
+          "balanced",
+          "balanced_subsample"
+        ],
+        "model__max_depth": [
+          null,
+          5,
+          10,
+          20,
+          30
+        ],
+        "model__max_features": [
+          "sqrt",
+          "log2",
+          0.5,
+          null
+        ],
+        "model__min_samples_leaf": [
+          1,
+          2,
+          4,
+          8
+        ],
+        "model__min_samples_split": [
+          2,
+          5,
+          10,
+          20
+        ],
+        "model__n_estimators": [
+          100,
+          200,
+          300,
+          500
+        ]
+      },
+      "test_metrics": {
+        "accuracy": 0.9044649538538289,
+        "average_precision": 0.9179051496656995,
+        "confusion_matrix": [
+          [
+            2781,
+            297
+          ],
+          [
+            86,
+            845
+          ]
+        ],
+        "f1": 0.8152436082971539,
+        "precision": 0.7399299474605955,
+        "recall": 0.907626208378088,
+        "roc_auc": 0.9694460322345826,
+        "threshold": 0.5
+      }
+    }
+  ],
+  "paths": {
+    "artifact_manifest": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_artifact_manifest.json",
+    "comparison_csv": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_model_comparison.csv",
+    "model_dir": "artifacts/experiments/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673",
+    "report_dir": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673",
+    "results_json": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_results.json",
+    "selected_model": "artifacts/experiments/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_selected_model.joblib"
+  },
+  "persistence": {
+    "status": "not_requested",
+    "storage": {
+      "paths": {},
+      "status": "not_requested"
+    }
+  },
+  "run_id": "e70cde76-34e4-4a88-ac1f-9c5cdf3e7673",
+  "selected_model": "GradientBoostingClassifier",
+  "selected_monitoring_metrics": {
+    "accuracy": 0.9458717884759291,
+    "actual_positive_rate": 0.23212771264654528,
+    "average_precision": 0.9566932207403748,
+    "confusion_matrix": [
+      [
+        14940,
+        452
+      ],
+      [
+        633,
+        4020
+      ]
+    ],
+    "f1": 0.8810958904109589,
+    "mean_risk_probability": 0.2314768804317047,
+    "precision": 0.8989266547406082,
+    "prediction_positive_rate": 0.22309802943377402,
+    "recall": 0.8639587362991619,
+    "roc_auc": 0.9848637112599878,
+    "threshold": 0.5,
+    "top_10_mean_probability": 0.9998999177348015
+  },
+  "selected_train_metrics": {
+    "accuracy": 0.9524195559990023,
+    "average_precision": 0.9664509866894663,
+    "confusion_matrix": [
+      [
+        11995,
+        319
+      ],
+      [
+        444,
+        3278
+      ]
+    ],
+    "f1": 0.8957507856264517,
+    "precision": 0.9113149847094801,
+    "recall": 0.8807092960773778,
+    "roc_auc": 0.9886266702809704,
+    "threshold": 0.5
+  },
+  "selection_rule": "Maximum mean cross-validated Average Precision; mean cross-validated F1 only for an exact tie."
+}

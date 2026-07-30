@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import Optional
 
 from sqlalchemy import text
 
@@ -84,7 +83,7 @@ def _split_sql_statements(sql_text: str) -> list:
                 buf.append(sql_text[i:])
                 i = length
             else:
-                buf.append(sql_text[i:end + len(dollar_tag)])
+                buf.append(sql_text[i : end + len(dollar_tag)])
                 i = end + len(dollar_tag)
                 dollar_tag = None
             continue
@@ -101,7 +100,7 @@ def _split_sql_statements(sql_text: str) -> list:
                 end = sql_text.find("*/", i + 2)
                 if end == -1:
                     break
-                buf.append(sql_text[i:end + 2])
+                buf.append(sql_text[i : end + 2])
                 i = end + 2
                 continue
 
@@ -127,7 +126,7 @@ def _split_sql_statements(sql_text: str) -> list:
         if not in_single and not in_double and ch == "$":
             end = sql_text.find("$", i + 1)
             if end != -1:
-                tag = sql_text[i:end + 1]
+                tag = sql_text[i : end + 1]
                 buf.append(tag)
                 i = end + 1
                 dollar_tag = tag
@@ -150,7 +149,7 @@ def _split_sql_statements(sql_text: str) -> list:
     return statements
 
 
-def ensure_schema(engine_to_use=engine, sql_path: Optional[Path] = None) -> bool:
+def ensure_schema(engine_to_use=engine, sql_path: Path | None = None) -> bool:
     """
     Ensure required schemas/tables exist. Returns True if initialization ran.
     """
@@ -167,8 +166,16 @@ def ensure_schema(engine_to_use=engine, sql_path: Optional[Path] = None) -> bool
         ops_steps_exists = _table_exists(conn, "ops", "etl_step_metrics")
         mlops_runs_exists = _table_exists(conn, "mlops", "training_runs")
         mlops_preds_exists = _table_exists(conn, "mlops", "predictions")
-        mlops_candidate_metrics_exists = _column_exists(conn, "mlops", "training_runs", "candidate_metrics")
-        mlops_storage_paths_exists = _column_exists(conn, "mlops", "training_runs", "storage_paths")
+        mlops_candidates_exists = _table_exists(conn, "mlops", "model_candidates")
+        mlops_candidate_metrics_exists = _column_exists(
+            conn, "mlops", "training_runs", "candidate_metrics"
+        )
+        mlops_storage_paths_exists = _column_exists(
+            conn, "mlops", "training_runs", "storage_paths"
+        )
+        mlops_run_metadata_exists = _column_exists(
+            conn, "mlops", "training_runs", "run_metadata"
+        )
         rpc_exists = _routine_exists(conn, "core", "rpc_ingestion_series")
         mlops_rpc_exists = _routine_exists(conn, "mlops", "rpc_latest_quality_risks")
         if (
@@ -177,8 +184,10 @@ def ensure_schema(engine_to_use=engine, sql_path: Optional[Path] = None) -> bool
             and ops_steps_exists
             and mlops_runs_exists
             and mlops_preds_exists
+            and mlops_candidates_exists
             and mlops_candidate_metrics_exists
             and mlops_storage_paths_exists
+            and mlops_run_metadata_exists
             and rpc_exists
             and mlops_rpc_exists
         ):

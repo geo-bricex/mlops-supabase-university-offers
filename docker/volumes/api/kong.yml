@@ -96,10 +96,10 @@ services:
 consumers:
   - username: anon
     keyauth_credentials:
-      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MjM0OTIsImV4cCI6MjA4Mzc4MzQ5Mn0.IM8r8chxkqakxZckG2oI6JQJmHQjEmusrQqd0kcYqC8
+      - key: ${SUPABASE_ANON_KEY}
   - username: service_role
     keyauth_credentials:
-      - key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvY2FsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODQyMzQ5MiwiZXhwIjoyMDgzNzgzNDkyfQ.S7LkEQUdhu9-yqxRv_OjUOuQWNylNRrUgpfGf6pCdco
+      - key: ${SUPABASE_SERVICE_KEY}
 
 acls:
   - consumer: anon

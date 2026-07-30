@@ -1,15 +1,17 @@
-import os
 import logging
+import os
 from contextlib import contextmanager
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.orm import declarative_base
+
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 
 load_dotenv()
 
 # Setup Logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("db_session")
 
 # Connection String Construction
@@ -18,9 +20,9 @@ logger = logging.getLogger("db_session")
 # When running inside docker, use 5432 and host 'db'.
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("POSTGRES_PORT", "54322") 
+DB_PORT = os.getenv("POSTGRES_PORT", "54322")
 DB_USER = os.getenv("DB_USER", "supabase_admin")
-DB_PASS = os.getenv("POSTGRES_PASSWORD", "your-super-secret-and-long-postgres-password")
+DB_PASS = os.getenv("POSTGRES_PASSWORD", "")
 DB_NAME = os.getenv("DB_NAME", "postgres")
 
 # Construct the connection string.
@@ -34,6 +36,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 ScopedSession = scoped_session(SessionLocal)
 
 Base = declarative_base()
+
 
 @contextmanager
 def get_db_session():
@@ -49,8 +52,9 @@ def get_db_session():
     finally:
         session.close()
 
+
 def init_db():
-    # Typically we use alembic or init.sql, but this can be used 
+    # Typically we use alembic or init.sql, but this can be used
     # if we define models in python and want to create them.
     # For this project, we primarily rely on sql/init.sql.
     pass

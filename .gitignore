@@ -1,8 +1,12 @@
 .env
+.venv/
 __pycache__/
 *.pyc
 artifacts/
 .pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
 # Docker volumes / local state
 docker/volumes/

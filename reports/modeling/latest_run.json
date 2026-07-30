@@ -1,0 +1,6 @@
+{
+  "comparison_csv": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_model_comparison.csv",
+  "results_json": "reports/modeling/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673/e70cde76-34e4-4a88-ac1f-9c5cdf3e7673_results.json",
+  "run_id": "e70cde76-34e4-4a88-ac1f-9c5cdf3e7673",
+  "selected_model": "GradientBoostingClassifier"
+}
