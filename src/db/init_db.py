@@ -167,6 +167,10 @@ def ensure_schema(engine_to_use=engine, sql_path: Path | None = None) -> bool:
         mlops_runs_exists = _table_exists(conn, "mlops", "training_runs")
         mlops_preds_exists = _table_exists(conn, "mlops", "predictions")
         mlops_candidates_exists = _table_exists(conn, "mlops", "model_candidates")
+        scenario_evaluations_exists = _table_exists(
+            conn, "mlops", "scenario_evaluations"
+        )
+        rule_catalog_exists = _table_exists(conn, "audit", "rule_catalog")
         mlops_candidate_metrics_exists = _column_exists(
             conn, "mlops", "training_runs", "candidate_metrics"
         )
@@ -175,6 +179,12 @@ def ensure_schema(engine_to_use=engine, sql_path: Path | None = None) -> bool:
         )
         mlops_run_metadata_exists = _column_exists(
             conn, "mlops", "training_runs", "run_metadata"
+        )
+        mlops_oof_metrics_exists = _column_exists(
+            conn, "mlops", "training_runs", "oof_metrics"
+        )
+        prediction_origin_exists = _column_exists(
+            conn, "mlops", "predictions", "prediction_origin"
         )
         rpc_exists = _routine_exists(conn, "core", "rpc_ingestion_series")
         mlops_rpc_exists = _routine_exists(conn, "mlops", "rpc_latest_quality_risks")
@@ -185,9 +195,13 @@ def ensure_schema(engine_to_use=engine, sql_path: Path | None = None) -> bool:
             and mlops_runs_exists
             and mlops_preds_exists
             and mlops_candidates_exists
+            and scenario_evaluations_exists
+            and rule_catalog_exists
             and mlops_candidate_metrics_exists
             and mlops_storage_paths_exists
             and mlops_run_metadata_exists
+            and mlops_oof_metrics_exists
+            and prediction_origin_exists
             and rpc_exists
             and mlops_rpc_exists
         ):

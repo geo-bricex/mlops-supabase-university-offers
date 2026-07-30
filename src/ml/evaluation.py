@@ -93,13 +93,17 @@ def evaluate_fitted_pipeline(
 
 
 def save_evaluation_outputs(
+    scenario: str,
     algorithm: str,
     evaluation: dict[str, Any],
     output_dir: Path,
 ) -> dict[str, str]:
     """Persist numerical curve points and their ROC/PR visualizations."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    slug = algorithm.lower().replace("classifier", "").replace("regression", "")
+    algorithm_slug = (
+        algorithm.lower().replace("classifier", "").replace("regression", "")
+    )
+    slug = f"{scenario}_{algorithm_slug}"
     prefix = output_dir.name
 
     roc_data_path = output_dir / f"{prefix}_{slug}_roc_curve.csv"

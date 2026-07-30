@@ -270,20 +270,26 @@ def render_storage_links(paths_dict):
             st.markdown(f"- `{artifact_name}`: `{path}`")
 
 
-def build_model_summary(latest_metrics, latest_cv_metrics, latest_run, predictions, monitoring_metrics):
+def build_model_summary(
+    latest_metrics,
+    latest_oof_metrics,
+    latest_cv_metrics,
+    latest_run,
+    candidate_rows,
+    predictions,
+    monitoring_metrics,
+):
     f1_score_value = safe_float(latest_metrics.get("f1"))
     recall = safe_float(latest_metrics.get("recall"))
     precision = safe_float(latest_metrics.get("precision"))
     roc_auc = safe_float(latest_metrics.get("roc_auc"))
-    overfit_gap = abs(safe_float(latest_run.get("overfit_gap")))
-    candidate_count = int((latest_metrics.get("regularization_guard") or {}).get("candidate_count") or 0)
-    selected_candidate = latest_metrics.get("selected_candidate") or latest_run.get("algorithm") or "n/a"
+    candidate_count = len(candidate_rows)
+    selected_candidate = latest_run.get("algorithm") or "n/a"
     storage_status = latest_run.get("storage_status") or "n/a"
     high_risk_count = 0
     if not predictions.empty and "risk_label" in predictions.columns:
         high_risk_count = int(predictions["risk_label"].fillna(False).astype(bool).sum())
     prediction_positive_rate = safe_float(monitoring_metrics.get("prediction_positive_rate"))
-    actual_positive_rate = safe_float(monitoring_metrics.get("actual_positive_rate"))
 
     summary = [
         (
@@ -299,12 +305,14 @@ def build_model_summary(latest_metrics, latest_cv_metrics, latest_run, predictio
             f"`{candidate_count}` candidate models with cross-validation."
         ),
         (
-            f"The overfit gap is `{overfit_gap:.3f}`. "
-            + ("This is low and healthy." if overfit_gap <= 0.05 else "This deserves closer review.")
+            "Training performance is estimated from true grouped out-of-fold "
+            f"predictions: AP `{safe_float(latest_oof_metrics.get('average_precision')):.3f}` "
+            f"and F1 `{safe_float(latest_oof_metrics.get('f1')):.3f}` at 0.5."
         ),
         (
-            f"The model currently flags about `{prediction_positive_rate:.1%}` of rows as risky, "
-            f"while the observed issue rate is `{actual_positive_rate:.1%}`."
+            f"The production artifact currently flags about "
+            f"`{prediction_positive_rate:.1%}` of rows as risky. These "
+            "production scores are not used as evaluation evidence."
         ),
         (
             f"Stored artifacts are **{storage_status}**, and the current preview shows "
@@ -323,18 +331,29 @@ def build_monitoring_summary(monitoring_metrics):
     if not monitoring_metrics:
         return []
     prediction_positive_rate = safe_float(monitoring_metrics.get("prediction_positive_rate"))
-    actual_positive_rate = safe_float(monitoring_metrics.get("actual_positive_rate"))
     mean_probability = safe_float(monitoring_metrics.get("mean_risk_probability"))
     top10_probability = safe_float(monitoring_metrics.get("top_10_mean_probability"))
     return [
         f"On the full scored dataset, the model marked `{prediction_positive_rate:.1%}` of rows as risky.",
-        f"The observed issue rate in that same dataset is `{actual_positive_rate:.1%}`.",
         f"The average predicted risk is `{mean_probability:.3f}`, which gives a sense of the model's general caution level.",
         f"The top 10 most suspicious rows have an average risk of `{top10_probability:.3f}`.",
+        (
+            "This is a feedback-capable, human-supervised snapshot; automated "
+            f"drift detection is `{monitoring_metrics.get('drift_detection_executed', False)}` "
+            f"and automatic retraining is `{monitoring_metrics.get('automatic_retraining', False)}`."
+        ),
     ]
 
 
-def build_ml_llm_context(latest_run, latest_metrics, latest_train_metrics, latest_cv_metrics, candidate_rows, predictions, monitoring_metrics):
+def build_ml_llm_context(
+    latest_run,
+    latest_metrics,
+    latest_oof_metrics,
+    latest_cv_metrics,
+    candidate_rows,
+    predictions,
+    monitoring_metrics,
+):
     top_predictions = predictions.head(10) if not predictions.empty else pd.DataFrame()
     top_risk_preview = "n/a"
     if not top_predictions.empty:
@@ -354,8 +373,7 @@ def build_ml_llm_context(latest_run, latest_metrics, latest_train_metrics, lates
                 (
                     f"{row.get('name')}: "
                     f"mean_f1={safe_float(row.get('mean_f1')):.3f}, "
-                    f"mean_ap={safe_float(row.get('mean_average_precision')):.3f}, "
-                    f"mean_roc_auc={safe_float(row.get('mean_roc_auc')):.3f}"
+                    f"mean_ap={safe_float(row.get('mean_average_precision')):.3f}"
                 )
                 for row in candidate_rows
             ]
@@ -366,21 +384,23 @@ def build_ml_llm_context(latest_run, latest_metrics, latest_train_metrics, lates
         Predictive quality section summary
         - Model name: {latest_run.get('model_name')}
         - Model version: {latest_run.get('model_version')}
-        - Selected candidate: {latest_metrics.get('selected_candidate')}
+        - Selected candidate: {latest_run.get('algorithm')}
+        - Primary scenario: {latest_run.get('primary_scenario')}
         - Storage status: {latest_run.get('storage_status')}
         - Holdout F1: {safe_float(latest_metrics.get('f1')):.3f}
         - Holdout precision: {safe_float(latest_metrics.get('precision')):.3f}
         - Holdout recall: {safe_float(latest_metrics.get('recall')):.3f}
         - Holdout ROC AUC: {safe_float(latest_metrics.get('roc_auc')):.3f}
         - Holdout average precision: {safe_float(latest_metrics.get('average_precision')):.3f}
-        - Overfit gap: {safe_float(latest_run.get('overfit_gap')):.3f}
-        - Train F1: {safe_float(latest_train_metrics.get('f1')):.3f}
+        - Grouped OOF F1 at 0.5: {safe_float(latest_oof_metrics.get('f1')):.3f}
+        - Grouped OOF average precision: {safe_float(latest_oof_metrics.get('average_precision')):.3f}
         - CV mean F1: {safe_float(latest_cv_metrics.get('mean_f1')):.3f}
         - CV mean average precision: {safe_float(latest_cv_metrics.get('mean_average_precision')):.3f}
         - Candidate comparison: {candidate_text}
         - Monitoring prediction positive rate: {safe_float(monitoring_metrics.get('prediction_positive_rate')):.3%}
-        - Monitoring actual positive rate: {safe_float(monitoring_metrics.get('actual_positive_rate')):.3%}
         - Monitoring mean risk probability: {safe_float(monitoring_metrics.get('mean_risk_probability')):.3f}
+        - Drift detection executed: {monitoring_metrics.get('drift_detection_executed', False)}
+        - Automatic retraining: {monitoring_metrics.get('automatic_retraining', False)}
         - Highest risk sample rows: {top_risk_preview}
         """
     ).strip()
@@ -1058,11 +1078,14 @@ with tab_mlops:
                 positive_rows,
                 positive_rate,
                 selected_metric,
-                train_metrics,
+                oof_metrics,
                 cv_metrics,
                 candidate_metrics,
-                overfit_gap,
                 metrics,
+                operational_metrics,
+                operational_threshold,
+                threshold_policy,
+                primary_scenario,
                 artifact_path,
                 storage_status,
                 storage_paths,
@@ -1077,15 +1100,17 @@ with tab_mlops:
         st.info("No ML training runs found yet. The `ml-trainer` service populates this section.")
     else:
         training_runs["metrics_dict"] = training_runs["metrics"].apply(parse_metrics)
-        training_runs["train_metrics_dict"] = training_runs["train_metrics"].apply(parse_metrics)
+        training_runs["oof_metrics_dict"] = training_runs["oof_metrics"].apply(parse_metrics)
         training_runs["cv_metrics_dict"] = training_runs["cv_metrics"].apply(parse_metrics)
         training_runs["candidate_metrics_dict"] = training_runs["candidate_metrics"].apply(parse_metrics)
+        training_runs["operational_metrics_dict"] = training_runs["operational_metrics"].apply(parse_metrics)
         training_runs["storage_paths_dict"] = training_runs["storage_paths"].apply(parse_json_value)
 
         latest_run = training_runs.iloc[0]
         latest_metrics = latest_run["metrics_dict"] or {}
-        latest_train_metrics = latest_run["train_metrics_dict"] or {}
+        latest_oof_metrics = latest_run["oof_metrics_dict"] or {}
         latest_cv_metrics = latest_run["cv_metrics_dict"] or {}
+        latest_operational_metrics = latest_run["operational_metrics_dict"] or {}
         latest_candidates = latest_run["candidate_metrics_dict"] or {}
         candidate_rows = latest_candidates.get("candidates") or []
 
@@ -1102,8 +1127,12 @@ with tab_mlops:
                     provincia,
                     canton,
                     estado,
-                    model_version
+                    model_version,
+                    prediction_origin,
+                    scenario,
+                    fold_id
                 FROM mlops.v_latest_quality_risk_predictions
+                WHERE prediction_origin = 'production_inference'
                 ORDER BY risk_probability DESC, row_num ASC
                 LIMIT 200
             """)
@@ -1131,16 +1160,21 @@ with tab_mlops:
         m4.metric("Ranking Quality (ROC AUC)", f"{safe_float(latest_metrics.get('roc_auc')):.3f}")
 
         g1, g2, g3, g4 = st.columns(4)
-        g1.metric("Winning Algorithm", latest_metrics.get("selected_candidate") or latest_run.get("algorithm") or "n/a")
+        g1.metric("Winning Algorithm", latest_run.get("algorithm") or "n/a")
         g2.metric("Selection Metric", latest_run.get("selected_metric") or "n/a")
-        g3.metric("Overfit Gap", f"{safe_float(latest_run.get('overfit_gap')):.3f}")
+        g3.metric(
+            "Operational Threshold",
+            f"{safe_float(latest_run.get('operational_threshold'), 0.5):.2f}",
+        )
         g4.metric("Stored Files", latest_run.get("storage_status") or "n/a")
 
         st.subheader("What This Means")
         for summary_line in build_model_summary(
             latest_metrics,
+            latest_oof_metrics,
             latest_cv_metrics,
             latest_run,
+            candidate_rows,
             predictions,
             latest_monitoring_metrics,
         ):
@@ -1201,7 +1235,7 @@ with tab_mlops:
                     ml_context = build_ml_llm_context(
                         latest_run,
                         latest_metrics,
-                        latest_train_metrics,
+                        latest_oof_metrics,
                         latest_cv_metrics,
                         candidate_rows,
                         predictions,
@@ -1231,13 +1265,13 @@ with tab_mlops:
                 by=["mean_average_precision", "mean_f1"],
                 ascending=False,
             )
-            winner_name = latest_metrics.get("selected_candidate") or latest_run.get("algorithm")
+            winner_name = latest_run.get("algorithm")
             if winner_name:
                 st.success(f"Selected winner: `{winner_name}`")
             fig_candidates = px.bar(
                 candidate_df,
                 x="name",
-                y=["mean_average_precision", "mean_f1", "mean_roc_auc"],
+                y=["mean_average_precision", "mean_f1"],
                 barmode="group",
                 title="Candidate Model Comparison"
             )
@@ -1303,7 +1337,10 @@ with tab_mlops:
             st.subheader("Highest Risk Records")
             preview = predictions.copy()
             preview["risk_percent"] = preview["risk_probability"].apply(lambda value: round(safe_float(value) * 100, 1))
-            risk_threshold = safe_float(latest_metrics.get("threshold"), 0.5)
+            risk_threshold = safe_float(
+                latest_run.get("operational_threshold"),
+                0.5,
+            )
             p1, p2, p3 = st.columns(3)
             p1.metric("Rows in Preview", len(preview))
             p2.metric("Rows Above Threshold", int(preview["risk_label"].fillna(False).astype(bool).sum()))
@@ -1357,8 +1394,14 @@ with tab_mlops:
                 "storage_status": latest_run.get("storage_status"),
                 "storage_paths": latest_run.get("storage_paths_dict"),
                 "metrics": latest_metrics,
-                "train_metrics": latest_train_metrics,
+                "oof_metrics": latest_oof_metrics,
                 "cv_metrics": latest_cv_metrics,
+                "operational_metrics": latest_operational_metrics,
+                "operational_threshold": latest_run.get(
+                    "operational_threshold"
+                ),
+                "threshold_policy": latest_run.get("threshold_policy"),
+                "primary_scenario": latest_run.get("primary_scenario"),
             })
 
         with st.expander("Open training run history"):
@@ -1366,9 +1409,10 @@ with tab_mlops:
                 training_runs.drop(
                     columns=[
                         "metrics_dict",
-                        "train_metrics_dict",
+                        "oof_metrics_dict",
                         "cv_metrics_dict",
                         "candidate_metrics_dict",
+                        "operational_metrics_dict",
                         "storage_paths_dict",
                     ]
                 ),

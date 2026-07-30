@@ -85,12 +85,13 @@ class ExperimentPaths:
 
 
 def save_search_results(
+    scenario: str,
     algorithm: str,
     search: Any,
     paths: ExperimentPaths,
 ) -> dict[str, str]:
     """Persist a fitted best pipeline and the complete ``cv_results_`` table."""
-    slug = algorithm.lower()
+    slug = f"{scenario}_{algorithm}".lower()
     pipeline_path = paths.model_dir / f"{paths.run_id}_{slug}_best_pipeline.joblib"
     cv_path = paths.report_dir / f"{paths.run_id}_{slug}_cv_results.csv"
     joblib.dump(search.best_estimator_, pipeline_path)
@@ -119,6 +120,18 @@ def save_selected_model(
     final_path = paths.model_dir / f"{paths.run_id}_selected_model.joblib"
     shutil.copy2(selected_pipeline_path, final_path)
     return final_path
+
+
+def save_fitted_pipeline(
+    pipeline: Any,
+    paths: ExperimentPaths,
+    *,
+    artifact_name: str,
+) -> Path:
+    """Persist a separately fitted evaluation or production pipeline."""
+    path = paths.model_dir / f"{paths.run_id}_{artifact_name}.joblib"
+    joblib.dump(pipeline, path)
+    return path
 
 
 def build_manifest(paths: ExperimentPaths, files: Iterable[Path]) -> dict[str, Any]:

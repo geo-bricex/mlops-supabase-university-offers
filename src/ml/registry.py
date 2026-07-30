@@ -149,8 +149,10 @@ class ExperimentRegistry:
         selected_algorithm: str,
         selected_summary: dict[str, Any],
         candidate_records: Iterable[dict[str, Any]],
+        scenario_records: Iterable[dict[str, Any]],
         test_metrics: dict[str, Any],
-        train_metrics: dict[str, Any],
+        operational_test_metrics: dict[str, Any],
+        oof_metrics: dict[str, Any],
         artifact_path: str,
         artifact_sha256: str,
         storage_result: dict[str, Any],
@@ -160,6 +162,8 @@ class ExperimentRegistry:
         positive_rows: int,
         positive_rate: float,
         duration_seconds: float,
+        operational_threshold: float,
+        threshold_policy: str,
         metadata: dict[str, Any],
         predictions: Iterable[dict[str, Any]] | None = None,
         importances: Iterable[dict[str, Any]] | None = None,
@@ -169,6 +173,7 @@ class ExperimentRegistry:
         if not self.enabled:
             return
         candidates = list(candidate_records)
+        scenarios = list(scenario_records)
         dashboard_candidates = {
             "candidates": [
                 {
@@ -218,9 +223,17 @@ class ExperimentRegistry:
                         best_params = CAST(:best_params AS JSONB),
                         best_score = :best_score,
                         train_metrics = CAST(:train_metrics AS JSONB),
+                        oof_metrics = CAST(:oof_metrics AS JSONB),
                         cv_metrics = CAST(:cv_metrics AS JSONB),
                         candidate_metrics = CAST(:candidate_metrics AS JSONB),
                         metrics = CAST(:metrics AS JSONB),
+                        operational_metrics = CAST(
+                            :operational_metrics AS JSONB
+                        ),
+                        operational_threshold = :operational_threshold,
+                        threshold_policy = :threshold_policy,
+                        primary_scenario = :primary_scenario,
+                        scenario_results = CAST(:scenario_results AS JSONB),
                         artifact_path = :artifact_path,
                         artifact_sha256 = :artifact_sha256,
                         storage_status = :storage_status,
@@ -244,10 +257,16 @@ class ExperimentRegistry:
                     "algorithm": selected_algorithm,
                     "best_params": _json(selected_summary["best_params"]),
                     "best_score": selected_summary["best_score"],
-                    "train_metrics": _json(train_metrics),
+                    "train_metrics": _json(oof_metrics),
+                    "oof_metrics": _json(oof_metrics),
                     "cv_metrics": _json(cv_metrics),
                     "candidate_metrics": _json(dashboard_candidates),
                     "metrics": _json(test_metrics),
+                    "operational_metrics": _json(operational_test_metrics),
+                    "operational_threshold": operational_threshold,
+                    "threshold_policy": threshold_policy,
+                    "primary_scenario": metadata["primary_scenario"],
+                    "scenario_results": _json(scenarios),
                     "artifact_path": artifact_path,
                     "artifact_sha256": artifact_sha256,
                     "storage_status": storage_result.get("status"),
@@ -255,8 +274,9 @@ class ExperimentRegistry:
                     "feature_schema": _json(feature_schema),
                     "run_metadata": _json(metadata),
                     "notes": (
-                        f"Selected {selected_algorithm} exclusively from "
-                        "training-data cross-validation."
+                        f"Selected {selected_algorithm} in the "
+                        f"{metadata['primary_scenario']} scenario exclusively "
+                        "from grouped training-data cross-validation."
                     ),
                 },
             )
@@ -270,8 +290,9 @@ class ExperimentRegistry:
                             search_method, optimization_metric, cv_folds,
                             search_iterations, search_space, best_params,
                             best_score, cv_mean, cv_std, cv_f1_mean, cv_f1_std,
-                            test_metrics, confusion_matrix, artifact_path,
-                            cv_results_path
+                            oof_metrics, test_metrics,
+                            operational_test_metrics, confusion_matrix,
+                            artifact_path, cv_results_path, scenario
                         )
                         VALUES (
                             :candidate_id, :run_id, :algorithm, :model_status,
@@ -279,9 +300,11 @@ class ExperimentRegistry:
                             :search_iterations, CAST(:search_space AS JSONB),
                             CAST(:best_params AS JSONB), :best_score, :cv_mean,
                             :cv_std, :cv_f1_mean, :cv_f1_std,
+                            CAST(:oof_metrics AS JSONB),
                             CAST(:test_metrics AS JSONB),
+                            CAST(:operational_test_metrics AS JSONB),
                             CAST(:confusion_matrix AS JSONB), :artifact_path,
-                            :cv_results_path
+                            :cv_results_path, :scenario
                         )
                         ON CONFLICT (run_id, algorithm) DO UPDATE SET
                             model_status = EXCLUDED.model_status,
@@ -291,7 +314,10 @@ class ExperimentRegistry:
                             cv_std = EXCLUDED.cv_std,
                             cv_f1_mean = EXCLUDED.cv_f1_mean,
                             cv_f1_std = EXCLUDED.cv_f1_std,
+                            oof_metrics = EXCLUDED.oof_metrics,
                             test_metrics = EXCLUDED.test_metrics,
+                            operational_test_metrics =
+                                EXCLUDED.operational_test_metrics,
                             confusion_matrix = EXCLUDED.confusion_matrix,
                             artifact_path = EXCLUDED.artifact_path,
                             cv_results_path = EXCLUDED.cv_results_path
@@ -304,11 +330,84 @@ class ExperimentRegistry:
                         "search_space": _json(candidate["search_space"]),
                         "best_params": _json(candidate["best_params"]),
                         "test_metrics": _json(candidate["test_metrics"]),
+                        "oof_metrics": _json(candidate["oof_metrics_at_0_5"]),
+                        "operational_test_metrics": _json(
+                            candidate.get("test_metrics_operational")
+                        ),
                         "confusion_matrix": _json(
                             candidate["test_metrics"]["confusion_matrix"]
                         ),
                     },
                 )
+
+            for scenario_record in scenarios:
+                for model in scenario_record["models"]:
+                    session.execute(
+                        text(
+                            """
+                            INSERT INTO mlops.scenario_evaluations (
+                                scenario_evaluation_id, run_id, scenario,
+                                scenario_role, algorithm, model_status,
+                                categorical_encoding, included_features,
+                                excluded_features, best_params, cv_mean, cv_std,
+                                cv_f1_mean, test_metrics_at_0_5,
+                                operational_test_metrics, duration_seconds
+                            )
+                            VALUES (
+                                :scenario_evaluation_id, :run_id, :scenario,
+                                :scenario_role, :algorithm, :model_status,
+                                :categorical_encoding,
+                                CAST(:included_features AS JSONB),
+                                CAST(:excluded_features AS JSONB),
+                                CAST(:best_params AS JSONB), :cv_mean, :cv_std,
+                                :cv_f1_mean,
+                                CAST(:test_metrics_at_0_5 AS JSONB),
+                                CAST(:operational_test_metrics AS JSONB),
+                                :duration_seconds
+                            )
+                            ON CONFLICT (run_id, scenario, algorithm)
+                            DO UPDATE SET
+                                model_status = EXCLUDED.model_status,
+                                best_params = EXCLUDED.best_params,
+                                cv_mean = EXCLUDED.cv_mean,
+                                cv_std = EXCLUDED.cv_std,
+                                cv_f1_mean = EXCLUDED.cv_f1_mean,
+                                test_metrics_at_0_5 =
+                                    EXCLUDED.test_metrics_at_0_5,
+                                operational_test_metrics =
+                                    EXCLUDED.operational_test_metrics,
+                                duration_seconds = EXCLUDED.duration_seconds
+                            """
+                        ),
+                        {
+                            "scenario_evaluation_id": str(uuid.uuid4()),
+                            "run_id": run_id,
+                            "scenario": scenario_record["name"],
+                            "scenario_role": scenario_record["role"],
+                            "algorithm": model["algorithm"],
+                            "model_status": model["model_status"],
+                            "categorical_encoding": model["categorical_encoding"],
+                            "included_features": _json(
+                                scenario_record["feature_definition"][
+                                    "included_features"
+                                ]
+                            ),
+                            "excluded_features": _json(
+                                scenario_record["feature_definition"][
+                                    "excluded_features"
+                                ]
+                            ),
+                            "best_params": _json(model["best_params"]),
+                            "cv_mean": model["cv_mean"],
+                            "cv_std": model["cv_std"],
+                            "cv_f1_mean": model["cv_f1_mean"],
+                            "test_metrics_at_0_5": _json(model["test_metrics_at_0_5"]),
+                            "operational_test_metrics": _json(
+                                model.get("test_metrics_operational")
+                            ),
+                            "duration_seconds": scenario_record["duration_seconds"],
+                        },
+                    )
 
             importance_rows = list(importances or [])
             if importance_rows:
@@ -336,12 +435,13 @@ class ExperimentRegistry:
                         INSERT INTO mlops.predictions (
                             prediction_id, run_id, file_id, row_num, natural_key,
                             risk_label, risk_probability, actual_label, threshold,
-                            detail
+                            prediction_origin, scenario, fold_id, detail
                         )
                         VALUES (
                             :prediction_id, :run_id, :file_id, :row_num,
                             :natural_key, :risk_label, :risk_probability,
-                            :actual_label, :threshold, CAST(:detail AS JSONB)
+                            :actual_label, :threshold, :prediction_origin,
+                            :scenario, :fold_id, CAST(:detail AS JSONB)
                         )
                         """
                     ),

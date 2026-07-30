@@ -8,6 +8,7 @@ from sqlalchemy import text
 
 from src.db.session import engine
 from src.dq.checks import collect_data_quality_issues
+from src.dq.rules import label_contributing_issue_types, rule_catalog_payload
 from src.etl.ingest import (
     REQUIRED_COLUMNS,
     generate_natural_key,
@@ -19,7 +20,7 @@ from src.geo.matching import GeoMatcher
 
 logger = logging.getLogger("ml_quality_risk")
 
-CATEGORICAL_FEATURES = [
+FULL_CATEGORICAL_FEATURES = [
     "tipo_ies",
     "tipo_financiamiento",
     "campo_amplio",
@@ -31,7 +32,7 @@ CATEGORICAL_FEATURES = [
     "geo_method",
 ]
 
-NUMERIC_FEATURES = [
+FULL_NUMERIC_FEATURES = [
     "geo_score_prov",
     "geo_score_canton",
     "has_nombre_ies",
@@ -42,6 +43,85 @@ NUMERIC_FEATURES = [
     "carrera_name_len",
     "natural_key_token_count",
 ]
+
+CATEGORICAL_FEATURES = FULL_CATEGORICAL_FEATURES
+NUMERIC_FEATURES = FULL_NUMERIC_FEATURES
+
+PRIMARY_SCENARIO = "leakage_controlled"
+SENSITIVITY_SCENARIO = "full_feature"
+
+LEAKAGE_CONTROLLED_CATEGORICAL_FEATURES = [
+    "tipo_ies",
+    "tipo_financiamiento",
+    "campo_amplio",
+    "nivel_formacion",
+    "modalidad",
+]
+LEAKAGE_CONTROLLED_NUMERIC_FEATURES: list[str] = []
+
+LEAKAGE_EXCLUSIONS = {
+    "estado": (
+        "Used by the conflicting_estado rule; excluded to avoid learning a "
+        "direct input to the label-generating consistency check."
+    ),
+    "provincia_norm": (
+        "Output of the same territory-normalization process evaluated by "
+        "missing_territory_norm and invalid_territory_pair."
+    ),
+    "canton_norm": (
+        "Output of the same territory-normalization process evaluated by "
+        "missing_territory_norm and invalid_territory_pair."
+    ),
+    "geo_method": (
+        "Direct diagnostic output of the territory-matching operation used by "
+        "the territorial quality rules."
+    ),
+    "geo_score_prov": (
+        "Direct confidence output of the province normalization operation."
+    ),
+    "geo_score_canton": (
+        "Direct confidence output of the canton normalization operation."
+    ),
+    "has_nombre_ies": (
+        "Deterministically reproduces the missing_nombre_ies rule condition."
+    ),
+    "has_nombre_carrera": (
+        "Deterministically reproduces the missing_nombre_carrera rule condition."
+    ),
+    "has_provincia_norm": (
+        "Deterministically reproduces part of missing_territory_norm."
+    ),
+    "has_canton_norm": ("Deterministically reproduces part of missing_territory_norm."),
+    "ies_name_len": ("A zero length is a direct proxy for missing institution name."),
+    "carrera_name_len": ("A zero length is a direct proxy for missing program name."),
+    "natural_key_token_count": (
+        "Derived from the business key used by the duplicate rule and from "
+        "fields participating in completeness checks."
+    ),
+}
+
+FEATURE_SCENARIOS = {
+    PRIMARY_SCENARIO: {
+        "role": "primary",
+        "categorical_features": LEAKAGE_CONTROLLED_CATEGORICAL_FEATURES,
+        "numeric_features": LEAKAGE_CONTROLLED_NUMERIC_FEATURES,
+        "excluded_features": LEAKAGE_EXCLUSIONS,
+        "interpretation": (
+            "Predictive sensitivity to pre-audit contextual attributes after "
+            "removing direct rule outputs and deterministic rule proxies."
+        ),
+    },
+    SENSITIVITY_SCENARIO: {
+        "role": "sensitivity",
+        "categorical_features": FULL_CATEGORICAL_FEATURES,
+        "numeric_features": FULL_NUMERIC_FEATURES,
+        "excluded_features": {},
+        "interpretation": (
+            "Rule-reproduction sensitivity analysis; it is not evidence of "
+            "independent discovery of unseen quality problems."
+        ),
+    },
+}
 
 META_COLUMNS = [
     "file_id",
@@ -230,6 +310,52 @@ def fetch_quality_risk_dataset(file_id: str, engine_to_use=engine) -> pd.DataFra
     return prepared
 
 
+def fetch_quality_risk_metadata(
+    file_id: str,
+    engine_to_use=engine,
+) -> dict[str, object]:
+    """Fetch ETL and audit provenance for one persisted source file."""
+    query = text(
+        """
+        SELECT
+            f.file_name,
+            f.checksum_sha256,
+            f.duration_seconds,
+            f.process_metrics,
+            d.metrics AS quality_metrics
+        FROM raw_ingest.files f
+        LEFT JOIN LATERAL (
+            SELECT metrics
+            FROM audit.data_quality_runs
+            WHERE file_id = f.file_id
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) d ON TRUE
+        WHERE f.file_id = :file_id
+        """
+    )
+    with engine_to_use.connect() as conn:
+        row = conn.execute(query, {"file_id": file_id}).mappings().first()
+    if not row:
+        raise ValueError(f"No persisted ingest metadata found for {file_id}.")
+    quality_metrics = _parse_json(row["quality_metrics"])
+    return {
+        "dataset_file_id": file_id,
+        "source_path": str(row["file_name"]),
+        "source_sha256": str(row["checksum_sha256"]),
+        "etl_duration_seconds": (
+            float(row["duration_seconds"])
+            if row["duration_seconds"] is not None
+            else None
+        ),
+        "etl_process_metrics": _parse_json(row["process_metrics"]),
+        "quality_metrics": quality_metrics,
+        "label_rules": label_contributing_issue_types(),
+        "rule_catalog": rule_catalog_payload(),
+        "rule_counts": quality_metrics.get("rule_counts", {}),
+    }
+
+
 def build_quality_risk_dataset_from_source(
     source_path: Path,
     catalog_path: Path = Path("assets/geo/territory_catalog.csv"),
@@ -342,14 +468,9 @@ def build_quality_risk_dataset_from_source(
         "source_sha256": source_sha256,
         "dataset_file_id": local_file_id,
         "quality_metrics": quality_metrics,
-        "label_rules": [
-            "duplicate_natural_key",
-            "missing_territory_norm",
-            "invalid_territory_pair",
-            "conflicting_estado",
-            "missing_nombre_ies",
-            "missing_nombre_carrera",
-        ],
+        "label_rules": label_contributing_issue_types(),
+        "rule_catalog": rule_catalog_payload(),
+        "rule_counts": quality_metrics["rule_counts"],
     }
     logger.info(
         "Rebuilt quality-risk dataset with %s rows from %s",
@@ -359,10 +480,27 @@ def build_quality_risk_dataset_from_source(
     return prepared, metadata
 
 
-def feature_schema() -> dict:
+def scenario_definition(name: str) -> dict[str, object]:
+    """Return a defensive copy of one declared feature scenario."""
+    if name not in FEATURE_SCENARIOS:
+        raise ValueError(f"Unknown feature scenario: {name}")
+    scenario = FEATURE_SCENARIOS[name]
     return {
-        "categorical_features": list(CATEGORICAL_FEATURES),
-        "numeric_features": list(NUMERIC_FEATURES),
+        "name": name,
+        "role": scenario["role"],
+        "categorical_features": list(scenario["categorical_features"]),
+        "numeric_features": list(scenario["numeric_features"]),
+        "included_features": list(scenario["categorical_features"])
+        + list(scenario["numeric_features"]),
+        "excluded_features": dict(scenario["excluded_features"]),
+        "interpretation": scenario["interpretation"],
+    }
+
+
+def feature_schema(scenario: str = PRIMARY_SCENARIO) -> dict:
+    definition = scenario_definition(scenario)
+    return {
+        **definition,
         "meta_columns": list(META_COLUMNS),
         "target_column": "actual_label",
         "task_name": "data_quality_risk_classification",

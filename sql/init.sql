@@ -151,9 +151,47 @@ CREATE TABLE IF NOT EXISTS audit.inconsistencies (
     issue_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     run_id UUID REFERENCES audit.data_quality_runs(run_id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    rule_id TEXT,
     issue_type TEXT,
     natural_key TEXT,
+    severity TEXT,
+    contributes_to_label BOOLEAN DEFAULT TRUE,
+    rule_version TEXT,
     detail JSONB
+);
+
+ALTER TABLE audit.inconsistencies ADD COLUMN IF NOT EXISTS rule_id TEXT;
+ALTER TABLE audit.inconsistencies ADD COLUMN IF NOT EXISTS severity TEXT;
+ALTER TABLE audit.inconsistencies
+    ADD COLUMN IF NOT EXISTS contributes_to_label BOOLEAN DEFAULT TRUE;
+ALTER TABLE audit.inconsistencies ADD COLUMN IF NOT EXISTS rule_version TEXT;
+
+CREATE TABLE IF NOT EXISTS audit.rule_catalog (
+    rule_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    dimension TEXT NOT NULL,
+    required_columns JSONB NOT NULL,
+    condition TEXT NOT NULL,
+    issue_type TEXT NOT NULL UNIQUE,
+    severity TEXT NOT NULL,
+    contributes_to_label BOOLEAN NOT NULL,
+    version TEXT NOT NULL,
+    description TEXT NOT NULL,
+    event_granularity TEXT NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS audit.rule_run_counts (
+    rule_run_count_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    run_id UUID NOT NULL REFERENCES audit.data_quality_runs(run_id)
+        ON DELETE CASCADE,
+    rule_id TEXT NOT NULL REFERENCES audit.rule_catalog(rule_id),
+    event_count INT NOT NULL,
+    affected_row_count INT NOT NULL,
+    affected_group_count INT NOT NULL,
+    label_positive_row_count INT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (run_id, rule_id)
 );
 
 -- 6) Analytics views and RPC endpoints
@@ -295,10 +333,16 @@ CREATE TABLE IF NOT EXISTS mlops.training_runs (
     best_params JSONB,
     best_score NUMERIC,
     train_metrics JSONB,
+    oof_metrics JSONB,
     cv_metrics JSONB,
     candidate_metrics JSONB,
     overfit_gap NUMERIC,
     metrics JSONB,
+    operational_metrics JSONB,
+    operational_threshold NUMERIC,
+    threshold_policy TEXT,
+    primary_scenario TEXT,
+    scenario_results JSONB,
     artifact_path TEXT,
     artifact_sha256 TEXT,
     storage_status TEXT,
@@ -346,9 +390,17 @@ CREATE TABLE IF NOT EXISTS mlops.predictions (
     risk_probability NUMERIC,
     actual_label BOOLEAN,
     threshold NUMERIC,
+    prediction_origin TEXT,
+    scenario TEXT,
+    fold_id INT,
     predicted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     detail JSONB
 );
+
+ALTER TABLE mlops.predictions
+    ADD COLUMN IF NOT EXISTS prediction_origin TEXT;
+ALTER TABLE mlops.predictions ADD COLUMN IF NOT EXISTS scenario TEXT;
+ALTER TABLE mlops.predictions ADD COLUMN IF NOT EXISTS fold_id INT;
 
 CREATE INDEX IF NOT EXISTS idx_mlops_predictions_run_id
     ON mlops.predictions(run_id);
@@ -372,6 +424,7 @@ CREATE INDEX IF NOT EXISTS idx_mlops_monitoring_runs_created_at
 
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS selected_metric TEXT;
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS train_metrics JSONB;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS oof_metrics JSONB;
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS cv_metrics JSONB;
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS candidate_metrics JSONB;
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS overfit_gap NUMERIC;
@@ -393,6 +446,13 @@ ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS sklearn_version TEXT;
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS git_commit TEXT;
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS run_metadata JSONB;
 ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS model_status TEXT;
+ALTER TABLE mlops.training_runs
+    ADD COLUMN IF NOT EXISTS operational_metrics JSONB;
+ALTER TABLE mlops.training_runs
+    ADD COLUMN IF NOT EXISTS operational_threshold NUMERIC;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS threshold_policy TEXT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS primary_scenario TEXT;
+ALTER TABLE mlops.training_runs ADD COLUMN IF NOT EXISTS scenario_results JSONB;
 
 CREATE TABLE IF NOT EXISTS mlops.model_candidates (
     candidate_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -411,12 +471,60 @@ CREATE TABLE IF NOT EXISTS mlops.model_candidates (
     cv_std NUMERIC NOT NULL,
     cv_f1_mean NUMERIC,
     cv_f1_std NUMERIC,
+    oof_metrics JSONB,
     test_metrics JSONB,
+    operational_test_metrics JSONB,
     confusion_matrix JSONB,
     artifact_path TEXT,
     cv_results_path TEXT,
+    scenario TEXT NOT NULL DEFAULT 'leakage_controlled',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE (run_id, algorithm)
+);
+
+ALTER TABLE mlops.model_candidates ADD COLUMN IF NOT EXISTS oof_metrics JSONB;
+ALTER TABLE mlops.model_candidates
+    ADD COLUMN IF NOT EXISTS operational_test_metrics JSONB;
+ALTER TABLE mlops.model_candidates
+    ADD COLUMN IF NOT EXISTS scenario TEXT NOT NULL DEFAULT 'leakage_controlled';
+
+CREATE TABLE IF NOT EXISTS mlops.scenario_evaluations (
+    scenario_evaluation_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    run_id UUID NOT NULL REFERENCES mlops.training_runs(run_id)
+        ON DELETE CASCADE,
+    scenario TEXT NOT NULL,
+    scenario_role TEXT NOT NULL,
+    algorithm TEXT NOT NULL,
+    model_status TEXT NOT NULL,
+    categorical_encoding TEXT NOT NULL,
+    included_features JSONB NOT NULL,
+    excluded_features JSONB NOT NULL,
+    best_params JSONB NOT NULL,
+    cv_mean NUMERIC NOT NULL,
+    cv_std NUMERIC NOT NULL,
+    cv_f1_mean NUMERIC,
+    test_metrics_at_0_5 JSONB,
+    operational_test_metrics JSONB,
+    duration_seconds NUMERIC,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (run_id, scenario, algorithm)
+);
+
+CREATE TABLE IF NOT EXISTS mlops.llm_interpretation_runs (
+    interpretation_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    run_id UUID REFERENCES mlops.training_runs(run_id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    model_name TEXT NOT NULL,
+    model_digest TEXT,
+    model_details JSONB,
+    configuration JSONB NOT NULL,
+    prompt_sha256 TEXT NOT NULL,
+    prompt TEXT NOT NULL,
+    structured_input JSONB NOT NULL,
+    response TEXT,
+    latency_seconds NUMERIC,
+    status TEXT NOT NULL CHECK (status IN ('success', 'failed')),
+    error TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_mlops_model_candidates_run_id
@@ -441,6 +549,9 @@ SELECT
     p.risk_probability,
     p.actual_label,
     p.threshold,
+    p.prediction_origin,
+    p.scenario,
+    p.fold_id,
     p.predicted_at,
     t.model_name,
     t.model_version,
@@ -497,6 +608,7 @@ AS $$
         ON p.file_id = s.file_id
        AND p.row_num = s.row_num
     WHERE t.is_active = TRUE
+      AND p.prediction_origin = 'production_inference'
     ORDER BY p.risk_probability DESC, p.predicted_at DESC
     LIMIT limit_count;
 $$;
@@ -510,6 +622,8 @@ ALTER TABLE core.dim_program ENABLE ROW LEVEL SECURITY;
 ALTER TABLE core.fact_offer ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit.data_quality_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit.inconsistencies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit.rule_catalog ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit.rule_run_counts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ops.service_health ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ops.etl_step_metrics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mlops.training_runs ENABLE ROW LEVEL SECURITY;
@@ -517,6 +631,8 @@ ALTER TABLE mlops.feature_importance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mlops.predictions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mlops.monitoring_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mlops.model_candidates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mlops.scenario_evaluations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mlops.llm_interpretation_runs ENABLE ROW LEVEL SECURITY;
 
 -- Allow public access for local dev (simply for ease of use in this context)
 -- In prod, you would configure specific policies.
@@ -536,6 +652,10 @@ DROP POLICY IF EXISTS "Enable all for anon/service_role" ON audit.data_quality_r
 CREATE POLICY "Enable all for anon/service_role" ON audit.data_quality_runs FOR ALL USING (true) WITH CHECK (true);
 DROP POLICY IF EXISTS "Enable all for anon/service_role" ON audit.inconsistencies;
 CREATE POLICY "Enable all for anon/service_role" ON audit.inconsistencies FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Enable all for anon/service_role" ON audit.rule_catalog;
+CREATE POLICY "Enable all for anon/service_role" ON audit.rule_catalog FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Enable all for anon/service_role" ON audit.rule_run_counts;
+CREATE POLICY "Enable all for anon/service_role" ON audit.rule_run_counts FOR ALL USING (true) WITH CHECK (true);
 DROP POLICY IF EXISTS "Enable all for anon/service_role" ON ops.service_health;
 CREATE POLICY "Enable all for anon/service_role" ON ops.service_health FOR ALL USING (true) WITH CHECK (true);
 DROP POLICY IF EXISTS "Enable all for anon/service_role" ON ops.etl_step_metrics;
@@ -550,6 +670,10 @@ DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.monitoring_run
 CREATE POLICY "Enable all for anon/service_role" ON mlops.monitoring_runs FOR ALL USING (true) WITH CHECK (true);
 DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.model_candidates;
 CREATE POLICY "Enable all for anon/service_role" ON mlops.model_candidates FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.scenario_evaluations;
+CREATE POLICY "Enable all for anon/service_role" ON mlops.scenario_evaluations FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Enable all for anon/service_role" ON mlops.llm_interpretation_runs;
+CREATE POLICY "Enable all for anon/service_role" ON mlops.llm_interpretation_runs FOR ALL USING (true) WITH CHECK (true);
 
 -- Grants for PostgREST + RPC
 GRANT USAGE ON SCHEMA core TO anon, authenticated, service_role;
@@ -566,6 +690,11 @@ GRANT SELECT ON mlops.feature_importance TO anon, authenticated, service_role;
 GRANT SELECT ON mlops.predictions TO anon, authenticated, service_role;
 GRANT SELECT ON mlops.monitoring_runs TO anon, authenticated, service_role;
 GRANT SELECT ON mlops.model_candidates TO anon, authenticated, service_role;
+GRANT SELECT ON mlops.scenario_evaluations TO anon, authenticated, service_role;
+GRANT SELECT ON mlops.llm_interpretation_runs TO anon, authenticated, service_role;
+GRANT USAGE ON SCHEMA audit TO anon, authenticated, service_role;
+GRANT SELECT ON audit.rule_catalog TO anon, authenticated, service_role;
+GRANT SELECT ON audit.rule_run_counts TO anon, authenticated, service_role;
 GRANT SELECT ON mlops.v_latest_training_run TO anon, authenticated, service_role;
 GRANT SELECT ON mlops.v_latest_quality_risk_predictions TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION mlops.rpc_latest_quality_risks(INT) TO anon, authenticated, service_role;

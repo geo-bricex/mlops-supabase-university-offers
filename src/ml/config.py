@@ -8,11 +8,11 @@ from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 
-from src.ml.quality_risk import CATEGORICAL_FEATURES, NUMERIC_FEATURES
+from src.ml.quality_risk import PRIMARY_SCENARIO, scenario_definition
 
 RANDOM_STATE = 42
 TEST_SIZE = 0.20
@@ -20,6 +20,9 @@ CV_FOLDS = 5
 SEARCH_ITERATIONS = 40
 OPTIMIZATION_METRIC = "average_precision"
 SEARCH_METHOD = "RandomizedSearchCV"
+PRIMARY_ENCODING = "onehot"
+REFERENCE_THRESHOLD = 0.5
+THRESHOLD_OBJECTIVE = "F2"
 MODEL_NAMES = (
     "LogisticRegression",
     "GradientBoostingClassifier",
@@ -36,6 +39,8 @@ class ModelSearchSpec:
     name: str
     pipeline: Pipeline
     parameter_space: ParameterSpace
+    scenario: str
+    categorical_encoding: str
 
 
 LOGISTIC_REGRESSION_SPACE: list[dict[str, Sequence[Any]]] = [
@@ -84,9 +89,9 @@ RANDOM_FOREST_SPACE: dict[str, Sequence[Any]] = {
 }
 
 
-def build_cv() -> StratifiedKFold:
+def build_cv() -> StratifiedGroupKFold:
     """Return the single cross-validation definition used by all searches."""
-    return StratifiedKFold(
+    return StratifiedGroupKFold(
         n_splits=CV_FOLDS,
         shuffle=True,
         random_state=RANDOM_STATE,
@@ -95,25 +100,31 @@ def build_cv() -> StratifiedKFold:
 
 def build_preprocessor(
     *,
+    categorical_features: Sequence[str],
+    numeric_features: Sequence[str],
     scale_numeric: bool,
-    one_hot: bool,
+    encoding_strategy: str,
 ) -> ColumnTransformer:
     """Build an unfitted preprocessing graph for mixed input data."""
     numeric_steps = [("imputer", SimpleImputer(strategy="median"))]
     if scale_numeric:
         numeric_steps.append(("scaler", StandardScaler()))
-    if one_hot:
+    if encoding_strategy == "onehot":
         categorical_encoder = OneHotEncoder(
             handle_unknown="ignore",
-            sparse_output=False,
+            sparse_output=True,
         )
-    else:
+    elif encoding_strategy == "ordinal":
         categorical_encoder = OrdinalEncoder(
             handle_unknown="use_encoded_value",
             unknown_value=-1,
         )
-    return ColumnTransformer(
-        transformers=[
+    else:
+        raise ValueError("encoding_strategy must be either 'onehot' or 'ordinal'.")
+
+    transformers = []
+    if categorical_features:
+        transformers.append(
             (
                 "categorical",
                 Pipeline(
@@ -122,20 +133,34 @@ def build_preprocessor(
                         ("encoder", categorical_encoder),
                     ]
                 ),
-                CATEGORICAL_FEATURES,
-            ),
+                list(categorical_features),
+            )
+        )
+    if numeric_features:
+        transformers.append(
             (
                 "numeric",
                 Pipeline(steps=numeric_steps),
-                NUMERIC_FEATURES,
-            ),
-        ],
+                list(numeric_features),
+            )
+        )
+    return ColumnTransformer(
+        transformers=transformers,
         remainder="drop",
+        sparse_threshold=1.0 if encoding_strategy == "onehot" else 0.0,
     )
 
 
-def build_model_specs(estimator_n_jobs: int = -1) -> list[ModelSearchSpec]:
+def build_model_specs(
+    estimator_n_jobs: int = -1,
+    *,
+    scenario: str = PRIMARY_SCENARIO,
+    encoding_strategy: str = PRIMARY_ENCODING,
+) -> list[ModelSearchSpec]:
     """Create the three required, unfitted estimator pipelines."""
+    definition = scenario_definition(scenario)
+    categorical_features = definition["categorical_features"]
+    numeric_features = definition["numeric_features"]
     return [
         ModelSearchSpec(
             name="LogisticRegression",
@@ -144,8 +169,10 @@ def build_model_specs(estimator_n_jobs: int = -1) -> list[ModelSearchSpec]:
                     (
                         "preprocess",
                         build_preprocessor(
+                            categorical_features=categorical_features,
+                            numeric_features=numeric_features,
                             scale_numeric=True,
-                            one_hot=True,
+                            encoding_strategy=encoding_strategy,
                         ),
                     ),
                     (
@@ -158,6 +185,8 @@ def build_model_specs(estimator_n_jobs: int = -1) -> list[ModelSearchSpec]:
                 ]
             ),
             parameter_space=LOGISTIC_REGRESSION_SPACE,
+            scenario=scenario,
+            categorical_encoding=encoding_strategy,
         ),
         ModelSearchSpec(
             name="GradientBoostingClassifier",
@@ -166,8 +195,10 @@ def build_model_specs(estimator_n_jobs: int = -1) -> list[ModelSearchSpec]:
                     (
                         "preprocess",
                         build_preprocessor(
+                            categorical_features=categorical_features,
+                            numeric_features=numeric_features,
                             scale_numeric=False,
-                            one_hot=False,
+                            encoding_strategy=encoding_strategy,
                         ),
                     ),
                     (
@@ -179,6 +210,8 @@ def build_model_specs(estimator_n_jobs: int = -1) -> list[ModelSearchSpec]:
                 ]
             ),
             parameter_space=GRADIENT_BOOSTING_SPACE,
+            scenario=scenario,
+            categorical_encoding=encoding_strategy,
         ),
         ModelSearchSpec(
             name="RandomForestClassifier",
@@ -187,8 +220,10 @@ def build_model_specs(estimator_n_jobs: int = -1) -> list[ModelSearchSpec]:
                     (
                         "preprocess",
                         build_preprocessor(
+                            categorical_features=categorical_features,
+                            numeric_features=numeric_features,
                             scale_numeric=False,
-                            one_hot=False,
+                            encoding_strategy=encoding_strategy,
                         ),
                     ),
                     (
@@ -201,6 +236,8 @@ def build_model_specs(estimator_n_jobs: int = -1) -> list[ModelSearchSpec]:
                 ]
             ),
             parameter_space=RANDOM_FOREST_SPACE,
+            scenario=scenario,
+            categorical_encoding=encoding_strategy,
         ),
     ]
 
